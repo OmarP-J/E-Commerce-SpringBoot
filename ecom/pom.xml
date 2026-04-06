@@ -8,8 +8,8 @@
 		<version>4.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.CodeShift</groupId>
-	<artifactId>E-commerce</artifactId>
+	<groupId>com.codeshift</groupId>
+	<artifactId>ecom</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
@@ -37,6 +37,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>12.6.1.jre11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

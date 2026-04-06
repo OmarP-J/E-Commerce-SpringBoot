@@ -1,10 +1,10 @@
-package com.CodeShift.E_commerce;
+package com.codeshift.ecom;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ECommerceApplicationTests {
+class EcomApplicationTests {
 
 	@Test
 	void contextLoads() {
