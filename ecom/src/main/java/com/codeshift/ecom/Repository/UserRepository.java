@@ -1,4 +1,12 @@
 package com.codeshift.ecom.Repository;
 
-public class UserRepository {
+import com.codeshift.ecom.Entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public class UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findFirstByEmail(String email);
 }
