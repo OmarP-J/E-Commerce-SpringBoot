@@ -2,13 +2,18 @@ package com.codeshift.ecom.Controllers;
 
 
 import com.codeshift.ecom.DTO.AuthenticationRequest;
+import com.codeshift.ecom.DTO.SignupRequest;
+import com.codeshift.ecom.DTO.UserDto;
 import com.codeshift.ecom.Entity.User;
 import com.codeshift.ecom.Repository.UserRepository;
+import com.codeshift.ecom.Services.auth.AuthService;
 import com.codeshift.ecom.Utils.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,6 +42,8 @@ public class AuthController {
 
     public static final String HEADER_STRING = "Authorization";
 
+    private final AuthService authService;
+
     @PostMapping("/authenticate")
     public void createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletResponse response) throws IOException, JSONException {
 
@@ -59,5 +66,15 @@ public class AuthController {
 
             response.addHeader(HEADER_STRING, TOKEN_PREFIX + jwt);
         }
+    }
+
+    @PostMapping("/sign-up")
+    public ResponseEntity<?> signupUser(@RequestBody SignupRequest signupRequest) {
+        if(authService.hasUserWithEmail(signupRequest.getEmail())) {
+            return new ResponseEntity<>("User already exists", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        UserDto userDto = authService.createUser(signupRequest);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 }
