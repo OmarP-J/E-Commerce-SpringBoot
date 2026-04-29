@@ -1,8 +1,7 @@
 package com.codeshift.ecom.Services.jwt;
 
-
 import com.codeshift.ecom.Entity.User;
-import com.codeshift.ecom.Repository.UserRepository;
+import com.codeshift.ecom.Services.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,10 +16,11 @@ public class UserDetailsServicesImpl implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> optionalUser = userRepository.findFirstByEmail(username);
-        if (optionalUser.isEmpty()) throw new UsernameNotFoundException("Username not found", null);
+        if (optionalUser.isEmpty()) throw new UsernameNotFoundException("Username not found");
         return new org.springframework.security.core.userdetails.User(optionalUser.get().getEmail(), optionalUser.get().getPassword(), new ArrayList<>());
     }
 }

@@ -5,7 +5,7 @@ import com.codeshift.ecom.DTO.AuthenticationRequest;
 import com.codeshift.ecom.DTO.SignupRequest;
 import com.codeshift.ecom.DTO.UserDto;
 import com.codeshift.ecom.Entity.User;
-import com.codeshift.ecom.Repository.UserRepository;
+import com.codeshift.ecom.Services.auth.UserRepository;
 import com.codeshift.ecom.Services.auth.AuthService;
 import com.codeshift.ecom.Utils.JwtUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +38,7 @@ public class AuthController {
 
     private final JwtUtils jwtUtils;
 
-    public static final String TOKEN_PREFIX = "Bearer";
+    public static final String TOKEN_PREFIX = "Bearer ";
 
     public static final String HEADER_STRING = "Authorization";
 
