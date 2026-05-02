@@ -1,5 +1,6 @@
 package com.codeshift.ecom.Entity;
 
+import com.codeshift.ecom.DTO.ProductDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -31,4 +32,15 @@ public class Product {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private Category category;
+
+    public ProductDTO getDto(){
+        ProductDTO productDto = new ProductDTO();
+        productDto.setId(id);
+        productDto.setName(name);
+        productDto.setPrice(price);
+        productDto.setDescription(description);
+        productDto.setByteImg(img);
+        productDto.setCategoryId(category.getId());
+        return productDto;
+    }
 }
