@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { UserStorageService } from './services/storage/user-storage.service';
-import { Router } from 'express';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatToolbarModule],
+  imports: [RouterOutlet, MatToolbarModule, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

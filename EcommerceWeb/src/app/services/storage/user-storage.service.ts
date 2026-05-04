@@ -11,21 +11,28 @@ export class UserStorageService {
   constructor() { }
 
     public saveToken(token: string): void{
-      window.localStorage.removeItem(TOKEN);
-      window.localStorage.setItem(TOKEN, token);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(TOKEN);
+        window.localStorage.setItem(TOKEN, token);
+      }
     }
 
-    public saveUser(user): void{
-      window.localStorage.removeItem(USER);
-      window.localStorage.setItem(USER, JSON.stringify(user));
+    public saveUser(user: any): void{
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(USER);
+        window.localStorage.setItem(USER, JSON.stringify(user));
+      }
     }
 
-    static getToken(): string {
-      return localStorage.getItem(TOKEN);
+    static getToken(): string | null {
+      if (typeof window === 'undefined') return null;
+      return window.localStorage.getItem(TOKEN);
     }
 
     static getUser(): any {
-      return JSON.parse(localStorage.getItem(USER));
+      if (typeof window === 'undefined') return null;
+      const userStr = window.localStorage.getItem(USER);
+      return userStr ? JSON.parse(userStr) : null;
     }
 
     static getUserId(): string {
@@ -45,7 +52,7 @@ export class UserStorageService {
     }
 
     static isAdminLoggedIn(): boolean {
-      if(this.getToken === null){
+      if(this.getToken() === null){
         return false;
       }
       const role: string = this.getUserRole();
@@ -53,7 +60,7 @@ export class UserStorageService {
     }
 
     static isCustomerLoggedIn(): boolean {
-      if(this.getToken === null){
+      if(this.getToken() === null){
         return false;
       }
       const role: string = this.getUserRole();
@@ -61,7 +68,9 @@ export class UserStorageService {
     }
 
     static signOut(): void {
-      window.localStorage.removeItem(TOKEN);
-      window.localStorage.removeItem(USER);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(TOKEN);
+        window.localStorage.removeItem(USER);
+      }
     }
 }

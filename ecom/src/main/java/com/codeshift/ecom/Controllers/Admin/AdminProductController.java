@@ -17,14 +17,14 @@ public class AdminProductController {
     private final AdminProductServiceImpl adminProductServiceImpl;
 
     @PostMapping("/product")
-    public ResponseEntity<ProductDTO> addProduct(@ModelAttribute ProductDTO productDTO){
+    public ResponseEntity<ProductDTO> addProduct(@ModelAttribute ProductDTO productDTO) throws java.io.IOException {
         ProductDTO productDTO1 = adminProductServiceImpl.addProduct((productDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(productDTO1);
     }
 
     @GetMapping("/products")
-    public ResponseEntity<ProductDTO>  getAllProduct(){
+    public ResponseEntity<List<ProductDTO>>  getAllProduct(){
         List<ProductDTO> productDtos = adminProductServiceImpl.getAllProducts();
-        return new ResponseEntity.ok(productDtos);
+        return ResponseEntity.ok(productDtos);
     }
 }

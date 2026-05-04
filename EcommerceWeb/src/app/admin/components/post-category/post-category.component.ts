@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, Validators } from "@angular/forms";
+import { FormBuilder, FormGroup, FormsModule, Validators } from "@angular/forms";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { DemoAngularMaterialModule } from "../../../DemoAngularMaterialModule";
-import { Router } from 'express';
+import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from '../../service/admin.service';
 
@@ -17,7 +17,7 @@ export class PostCategoryComponent {
   categoryForm: FormGroup;
 
   constructor(
-    private fb: FormGroup,
+    private fb: FormBuilder,
     private router: Router,
     private snackBar: MatSnackBar,
     private adminService: AdminService

@@ -20,12 +20,12 @@ public class AdminProductServiceImpl implements AdminProductService{
 
     private final CategoryRepository categoryRepository;
 
-    public ProductDTO addProductDTO(ProductDTO productDTO){
+    public ProductDTO addProduct(ProductDTO productDTO) throws IOException {
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setPrice(productDTO.getPrice());
-        product.setId(productDTO.getImg().getBytes());
+        product.setImg(productDTO.getImg().getBytes());
 
         Category category = categoryRepository.findById(productDTO.getCategoryId()).orElseThrow();
 
