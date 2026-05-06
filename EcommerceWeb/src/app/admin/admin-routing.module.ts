@@ -8,7 +8,7 @@ const routes: Routes = [
   { path: '', component: AdminComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'category', component: PostCategoryComponent },
-
+  { path: 'product', component: PostProductComponent },
 ];
 
 @NgModule({
