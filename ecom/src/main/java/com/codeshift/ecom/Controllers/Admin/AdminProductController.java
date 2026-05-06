@@ -27,4 +27,10 @@ public class AdminProductController {
         List<ProductDTO> productDtos = adminProductServiceImpl.getAllProducts();
         return ResponseEntity.ok(productDtos);
     }
+
+    @GetMapping("/search/{name}")
+    public ResponseEntity<List<ProductDTO>>  getAllProductByName(@PathVariable String name){
+        List<ProductDTO> productDtos = adminProductServiceImpl.getAllProductByName(name);
+        return ResponseEntity.ok(productDtos);
+    }
 }
