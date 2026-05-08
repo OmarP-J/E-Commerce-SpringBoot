@@ -1,7 +1,6 @@
 package com.codeshift.ecom.Services.jwt;
 
 import com.codeshift.ecom.Entity.User;
-import com.codeshift.ecom.Services.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
