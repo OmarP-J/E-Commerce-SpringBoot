@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -56,11 +58,14 @@ public class AuthServiceImpl implements AuthService {
 
     @PostConstruct
     public void createAdminAccount() {
-        User user = new User();
-        user.setEmail("admin@test.com");
-        user.setName("admin");
-        user.setPassword(bCryptPasswordEncoder.encode("admin"));
-        user.setRole(UserRole.ADMIN);
-        userRepository.save(user);
+        Optional<User> adminAccount = userRepository.findFirstByRole(UserRole.ADMIN);
+        if (adminAccount.isEmpty()) {
+            User user = new User();
+            user.setEmail("admin@test.com");
+            user.setName("admin");
+            user.setPassword(bCryptPasswordEncoder.encode("admin"));
+            user.setRole(UserRole.ADMIN);
+            userRepository.save(user);
+        }
     }
 }

@@ -24,7 +24,7 @@ public class Product {
     private String description;
 
     @Lob
-    @Column(columnDefinition = "longblob")
+    @Column(name = "img")
     private byte[] img;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
