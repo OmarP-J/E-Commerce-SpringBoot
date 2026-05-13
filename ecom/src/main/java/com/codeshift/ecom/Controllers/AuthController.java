@@ -1,6 +1,5 @@
 package com.codeshift.ecom.Controllers;
 
-
 import com.codeshift.ecom.DTO.AuthenticationRequest;
 import com.codeshift.ecom.DTO.SignupRequest;
 import com.codeshift.ecom.DTO.UserDto;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import java.io.IOException;
 import java.util.Optional;
 
@@ -32,7 +30,7 @@ import java.util.Optional;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
 
-    private  final UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
     private final UserRepository userRepository;
 
@@ -45,10 +43,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/authenticate")
-    public void createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletResponse response) throws IOException, JSONException {
+    public void createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest,
+            HttpServletResponse response) throws IOException, JSONException {
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Incorrect username or password");
         }
@@ -61,8 +61,7 @@ public class AuthController {
             response.getWriter().write(new JSONObject()
                     .put("userId", optionalUser.get().getId())
                     .put("role", optionalUser.get().getRole())
-                    .toString()
-            );
+                    .toString());
 
             response.addHeader("Access-Control-Expose-Headers", "Authorization");
             response.addHeader("Access-Control-Allow-Credentials", "Authorization, X-PINGOTHER, Origin, " +
@@ -73,7 +72,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signupUser(@RequestBody SignupRequest signupRequest) {
-        if(authService.hasUserWithEmail(signupRequest.getEmail())) {
+        if (authService.hasUserWithEmail(signupRequest.getEmail())) {
             return new ResponseEntity<>("User already exists", HttpStatus.NOT_ACCEPTABLE);
         }
 

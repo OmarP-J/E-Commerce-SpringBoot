@@ -1,7 +1,5 @@
 package com.codeshift.ecom.DTO;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Lob;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 

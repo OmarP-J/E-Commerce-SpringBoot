@@ -33,25 +33,26 @@ public class CartServiceImpl implements CartService {
     private ProductRepository productRepository;
 
     public ResponseEntity<?> addProductInCart(AddProductInCartDTO addProductInCartDTO) {
-        Order activeOrder = orderRepository.findByUserIdAndOrderStatus(addProductInCartDTO.getUserId(), OrderStatus.Pending);
-        Optional<CartItems> optionalCartItems = cartItemsRepository.findByProductIdAndOrderIdAndUserId
-                (addProductInCartDTO.getProductId(), activeOrder.getId(), addProductInCartDTO.getUserId());
+        Order activeOrder = orderRepository.findByUserIdAndOrderStatus(addProductInCartDTO.getUserId(),
+                OrderStatus.Pending);
+        Optional<CartItems> optionalCartItems = cartItemsRepository.findByProductIdAndOrderIdAndUserId(
+                addProductInCartDTO.getProductId(), activeOrder.getId(), addProductInCartDTO.getUserId());
 
         if (optionalCartItems.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-        }else {
+        } else {
             Optional<Product> optionalProduct = productRepository.findById(addProductInCartDTO.getProductId());
             Optional<User> optionalUser = userRepository.findById(addProductInCartDTO.getUserId());
 
-            if(optionalProduct.isPresent() && optionalUser.isPresent()) {
-                CartItems cart =  new CartItems();
+            if (optionalProduct.isPresent() && optionalUser.isPresent()) {
+                CartItems cart = new CartItems();
                 cart.setProduct(optionalProduct.get());
                 cart.setPrice(optionalProduct.get().getPrice());
                 cart.setQuantity(1L);
                 cart.setUser(optionalUser.get());
                 cart.setOrder(activeOrder);
 
-                CartItems updateCart = cartItemsRepository.save(cart);
+                cartItemsRepository.save(cart);
 
                 activeOrder.setTotalAmount(activeOrder.getAmount() + cart.getPrice());
                 activeOrder.setAmount(activeOrder.getAmount() + cart.getPrice());
@@ -60,7 +61,7 @@ public class CartServiceImpl implements CartService {
                 orderRepository.save(activeOrder);
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(cart);
-            }else {
+            } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User or product not found");
             }
         }

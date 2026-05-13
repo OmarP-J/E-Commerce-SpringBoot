@@ -1,12 +1,14 @@
 package com.codeshift.ecom.Services.Customer;
 
 import com.codeshift.ecom.DTO.ProductDTO;
-
 import java.util.List;
 
 public interface CustomerProductService {
 
-    List<ProductDTO> getAllProductsByTitle(String title);
+    // Retrieve all products
+    List<ProductDTO> getAllProducts();
 
-    List<ProductDTO> getAllProducts(String category);
+    // Search products by title
+    List<ProductDTO> searchProductByTitle(String title);
+
 }
