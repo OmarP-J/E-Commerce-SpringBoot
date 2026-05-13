@@ -6,11 +6,17 @@ import { AdminComponent } from './admin.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DemoAngularMaterialModule } from '../DemoAngularMaterialModule';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { PostCategoryComponent } from './components/post-category/post-category.component';
+import { PostProductComponent } from './components/post-product/post-product.component';
 
 
 @NgModule({
   declarations: [
-    AdminComponent
+    AdminComponent,
+    DashboardComponent,
+    PostCategoryComponent, 
+    PostProductComponent
   ],
   imports: [
     CommonModule,

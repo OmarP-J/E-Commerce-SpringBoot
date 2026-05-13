@@ -22,16 +22,19 @@ export class AuthService {
     const body = {username, password};
 
     return this.http.post(BASIC_URL + 'authenticate', body, { headers, observe: 'response' }).pipe(
-      map((res) =>{
-        const token = res.headers.get('authorization').substring(7);
-        const user = res.body;
-        if(token && user){
-          this.userStorageService.saveToken(token);
-          this.userStorageService.saveUser(user);
-          return true;
+      map((res) => {
+        const authHeader = res.headers.get('authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          const user = res.body;
+          if (token && user) {
+            this.userStorageService.saveToken(token);
+            this.userStorageService.saveUser(user);
+            return true;
+          }
         }
         return false;
       })
-    )
+    );
   }
 }

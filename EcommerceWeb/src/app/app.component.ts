@@ -1,29 +1,29 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { UserStorageService } from './services/storage/user-storage.service';
+import { Component, OnInit } from '@angular/core';
+import { RouterOutlet, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { UserStorageService } from './services/storage/user-storage.service';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatToolbarModule, CommonModule],
+  imports: [RouterOutlet, CommonModule, MatToolbarModule, MatButtonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'EcommerceWeb';
+  isCustomerLoggedIn: boolean = UserStorageService.isCustomerLoggedIn();
+  isAdminLoggedIn: boolean = UserStorageService.isAdminLoggedIn();
 
-  isCustomerLoggedIn : boolean = UserStorageService.isCustomerLoggedIn();
-  isAdminLoggedIn : boolean = UserStorageService.isAdminLoggedIn();
-
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
-    this.router.events.subscribe(event => {
+    this.router.events.subscribe(() => {
       this.isCustomerLoggedIn = UserStorageService.isCustomerLoggedIn();
       this.isAdminLoggedIn = UserStorageService.isAdminLoggedIn();
-    })
+    });
   }
 
   logout() {

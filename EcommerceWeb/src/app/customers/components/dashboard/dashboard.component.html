@@ -1,4 +1,4 @@
-<form [formGroup]="searchProductForm" class="search-form" (submit)="subimtForm()">
+<form [formGroup]="searchProductForm" class="search-form" (submit)="submitForm()">
     <mat-form-field appearance="outline" class="search-input">
     <mat-label>Enter Keyword to Search</mat-label>
     <input matInput formControlName="title">
@@ -10,7 +10,7 @@
 
 
 <div class="product-list">
-    <mat-card class="productd-card" *ngFor="let product of products">
+    <mat-card class="product-card" *ngFor="let product of products">
         <div class="product-image">
             <img [src]="product.processedImg" alt="product-image" />
         </div>

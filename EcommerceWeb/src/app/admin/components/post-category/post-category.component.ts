@@ -8,9 +8,10 @@ import { AdminService } from '../../service/admin.service';
 
 @Component({
   selector: 'app-post-category',
-  imports: [FormsModule, BrowserAnimationsModule, DemoAngularMaterialModule],
+  standalone: false,
   templateUrl: './post-category.component.html',
   styleUrl: './post-category.component.scss'
+
 })
 export class PostCategoryComponent {
     

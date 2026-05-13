@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { DemoAngularMaterialModule } from "../DemoAngularMaterialModule";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { response, Router } from 'express';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-signup',
-  imports: [DemoAngularMaterialModule, BrowserAnimationsModule],
+  standalone: false,
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss'
 })

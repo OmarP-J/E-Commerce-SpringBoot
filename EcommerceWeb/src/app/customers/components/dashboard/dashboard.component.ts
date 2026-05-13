@@ -5,7 +5,7 @@ import { CustomerService } from '../../Services/customer.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -34,7 +34,7 @@ export class DashboardComponent {
     })
   }
 
-  subimtForm(){
+  submitForm(){
     this.products = [];
     const title = this.searchProductForm.get('title')?.value;
     this.customerService.getAllProductsByName(title).subscribe(res => {

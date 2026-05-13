@@ -6,7 +6,7 @@
 
                 <mat-form-field appearance="outline">
                     <mat-label>E-mail</mat-label>
-                    <input matInput formControlNamesd="email" placeholder="Email" required>
+                    <input matInput formControlName="email" placeholder="Email" required>
                     <mat-error *ngIf="loginForm.get('email').invalid && loginForm.get('email').touched">
                         Please enter a valid email address.
                     </mat-error>

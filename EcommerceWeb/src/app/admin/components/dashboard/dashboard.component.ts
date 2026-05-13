@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [BrowserAnimationsModule, DemoAngularMaterialModule, AdminRoutingModule],
+  standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -38,7 +38,7 @@ export class DashboardComponent {
     })
   }
 
-  subimtForm(){
+  submitForm(){
     this.products = [];
     const title = this.searchProductForm.get('title')?.value;
     this.adminService.getAllProductsByName(title).subscribe(res => {
