@@ -47,5 +47,10 @@ export class DashboardComponent {
   }
 
   addTocart(id: any){
+    this.customerService.addToCart(id).subscribe(res => {
+      this.snackbar.open('Product added to cart successfully', 'Close', {
+        duration: 3000,
+      });
+    }
   }
 }
