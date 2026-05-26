@@ -58,6 +58,7 @@ public class AuthController {
         final String jwt = jwtUtils.generateToken(userDetails.getUsername());
 
         if (optionalUser.isPresent()) {
+            response.setContentType("application/json");
             response.getWriter().write(new JSONObject()
                     .put("userId", optionalUser.get().getId())
                     .put("role", optionalUser.get().getRole())

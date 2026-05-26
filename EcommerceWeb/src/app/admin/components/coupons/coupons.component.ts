@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { AdminService } from '../../service/admin.service';
 import { DemoAngularMaterialModule } from "../../../DemoAngularMaterialModule";
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-coupons',
-  imports: [DemoAngularMaterialModule],
+  imports: [DemoAngularMaterialModule, CommonModule],
   templateUrl: './coupons.component.html',
   styleUrl: './coupons.component.scss'
 })

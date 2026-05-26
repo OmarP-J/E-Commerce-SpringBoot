@@ -32,7 +32,16 @@ export class UserStorageService {
     static getUser(): any {
       if (typeof window === 'undefined') return null;
       const userStr = window.localStorage.getItem(USER);
-      return userStr ? JSON.parse(userStr) : null;
+      if (!userStr) return null;
+      try {
+        let parsed = JSON.parse(userStr);
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
+        return parsed;
+      } catch (e) {
+        return null;
+      }
     }
 
     static getUserId(): string {
