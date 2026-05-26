@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "workspaces": [
+    "EcommerceWeb"
+  ],
+  "scripts": {
+    "build": "cd EcommerceWeb && npm run build",
+    "start": "cd EcommerceWeb && npm start",
+    "test": "cd EcommerceWeb && npm test"
+  }
+}
