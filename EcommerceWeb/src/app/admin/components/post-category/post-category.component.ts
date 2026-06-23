@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, Validators } from "@angular/forms";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { DemoAngularMaterialModule } from "../../../DemoAngularMaterialModule";
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
