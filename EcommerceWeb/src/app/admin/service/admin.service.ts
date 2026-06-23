@@ -37,13 +37,13 @@ export class AdminService {
   }
 
   getAllProductsByName(name:any): Observable<any>{
-    return this.http.get(BASIC_URL + 'api/admin/search/${name}', {
+    return this.http.get(BASIC_URL + `api/admin/search/${name}`, {
       headers: this.createAuthorizationHeader(),
     })
   }
 
   deleteProduct(productId: any): Observable<any>{
-    return this.http.delete(BASIC_URL + 'api/admin/product/id/${productId}', {
+    return this.http.delete(BASIC_URL + `api/admin/product/id/${productId}`, {
       headers: this.createAuthorizationHeader(),
     })
   }
@@ -61,9 +61,11 @@ export class AdminService {
   }
 
   private createAuthorizationHeader(): HttpHeaders{
-    return new HttpHeaders().set(
-      'Authorization', 'Bearer ' + UserStorageService.getToken()
-    )
+    const token = UserStorageService.getToken();
+    if (token) {
+      return new HttpHeaders().set('Authorization', 'Bearer ' + token);
+    }
+    return new HttpHeaders();
   }
 }
 

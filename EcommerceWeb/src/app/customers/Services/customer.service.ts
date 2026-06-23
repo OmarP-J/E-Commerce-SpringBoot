@@ -19,7 +19,7 @@ export class CustomerService {
   }
 
   getAllProductsByName(name:any): Observable<any>{
-    return this.http.get(BASIC_URL + 'api/customer/search/${name}', {
+    return this.http.get(BASIC_URL + `api/customer/search/${name}`, {
       headers: this.createAuthorizationHeader(),
     })
   }
@@ -36,21 +36,23 @@ export class CustomerService {
 
   getCartByUserId(productId:any): Observable<any>{
     const userId = UserStorageService.getUserId();
-    return this.http.get(BASIC_URL + 'api/customer/cart/${userId}', {
+    return this.http.get(BASIC_URL + `api/customer/cart/${userId}`, {
       headers: this.createAuthorizationHeader(),
     })
   }
 
   applyCoupon(code:any): Observable<any>{
     const userId = UserStorageService.getUserId();
-    return this.http.get(BASIC_URL + 'api/customer/coupon/${userId}/${code}', {
+    return this.http.get(BASIC_URL + `api/customer/coupon/${userId}/${code}`, {
       headers: this.createAuthorizationHeader(),
     })
   }
   
   private createAuthorizationHeader(): HttpHeaders{
-    return new HttpHeaders().set(
-      'Authorization', 'Bearer ' + UserStorageService.getToken()
-    )
+    const token = UserStorageService.getToken();
+    if (token) {
+      return new HttpHeaders().set('Authorization', 'Bearer ' + token);
+    }
+    return new HttpHeaders();
   }
 }

@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CustomerService } from '../../Services/customer.service';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { CommonModule } from '@angular/common';
 import { DemoAngularMaterialModule } from "../../../DemoAngularMaterialModule";
 
 @Component({
   selector: 'app-cart',
-  imports: [BrowserAnimationsModule, DemoAngularMaterialModule],
+  imports: [DemoAngularMaterialModule, FormsModule, ReactiveFormsModule, CommonModule],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss'
 })

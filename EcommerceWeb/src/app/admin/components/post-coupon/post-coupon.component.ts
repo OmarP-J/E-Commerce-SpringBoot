@@ -1,18 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DemoAngularMaterialModule } from "../../../DemoAngularMaterialModule";
-import { FormBuilder, FormGroup, FormsModule, Validators } from "@angular/forms";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
+import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from 'express';
+import { Router } from '@angular/router';
 import { AdminService } from '../../service/admin.service';
 
 @Component({
   selector: 'app-post-coupon',
-  imports: [DemoAngularMaterialModule, FormsModule, BrowserAnimationsModule],
+  imports: [DemoAngularMaterialModule, FormsModule, ReactiveFormsModule, CommonModule],
   templateUrl: './post-coupon.component.html',
   styleUrl: './post-coupon.component.scss'
 })
-export class PostCouponComponent {
+export class PostCouponComponent implements OnInit {
 
   couponForm!: FormGroup;
 

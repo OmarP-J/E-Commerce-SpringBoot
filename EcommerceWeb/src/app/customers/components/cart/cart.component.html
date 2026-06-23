@@ -26,10 +26,10 @@
         </div>
 
         <div class="total-price">
-            Total Amount: {{ order.totalAmount() | currency }}
+            Total Amount: {{ order.totalAmount | currency }}
         </div>
         <div class="total-price">
-            Amount: {{ order.amount() | currency }}
+            Amount: {{ order.amount | currency }}
         </div>
         <div class="total-price" *ngIf="order.couponName != null">
             Coupon Applied: {{ order.couponName }}
