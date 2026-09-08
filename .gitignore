@@ -1,0 +1,21 @@
+# Backend
+ecom/target/
+ecom/data/
+
+# Frontend
+EcommerceWeb/node_modules/
+EcommerceWeb/dist/
+EcommerceWeb/.angular/
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Editores y sistema operativo
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
