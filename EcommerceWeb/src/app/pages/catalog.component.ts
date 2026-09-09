@@ -12,6 +12,8 @@ import { Cart, Category, PageResult, Product } from "../core/models";
 export class CatalogComponent extends Page implements OnInit {
   readonly wishlist = !!inject(ActivatedRoute).snapshot.data["wishlist"];
   private readonly router = inject(Router);
+  private rawWishlist: Product[] = [];
+  readonly pageSize = 12;
   products: Product[] = [];
   categories: Category[] = [];
   q = "";
@@ -22,13 +24,22 @@ export class CatalogComponent extends Page implements OnInit {
   ngOnInit(): void {
     this.load();
   }
+
+  filtersChanged(delay = 300): void {
+    if (this.wishlist) {
+      this.debounce("catalog-wishlist-filters", () => this.applyWishlistFilter(true), delay);
+    } else {
+      this.debounce("catalog-filters", () => this.load(true), delay);
+    }
+  }
+
   load(reset = false): void {
     if (reset) this.page = 0;
     void this.execute(async () => {
       this.categories = await this.api.get<Category[]>("/catalog/categories");
       if (this.wishlist) {
-        this.products = await this.api.get<Product[]>("/customer/wishlist");
-        this.total = this.products.length;
+        this.rawWishlist = await this.api.get<Product[]>("/customer/wishlist");
+        this.applyWishlistFilter(reset);
       } else {
         const query = new URLSearchParams({
           q: this.q,
@@ -44,9 +55,34 @@ export class CatalogComponent extends Page implements OnInit {
       }
     });
   }
+
+  private applyWishlistFilter(reset = false): void {
+    if (reset) this.page = 0;
+    const query = this.q.trim();
+    const filtered = query
+      ? this.rawWishlist.filter((p) =>
+          this.matchesSearch(query, p.name, p.categoryName, p.description),
+        )
+      : this.rawWishlist;
+    this.total = filtered.length;
+    this.totalPages = this.pageCount(this.total, this.pageSize);
+    if (this.page >= this.totalPages && this.totalPages > 0) {
+      this.page = this.totalPages - 1;
+    }
+    this.products = this.paginate(filtered, this.page, this.pageSize);
+  }
+
   turn(direction: number): void {
-    this.page += direction;
-    this.load();
+    this.goToPage(this.page + direction);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages || page === this.page) return;
+    this.page = page;
+    if (this.wishlist) {
+      this.applyWishlistFilter();
+    } else {
+      this.load();
+    }
   }
   add(product: Product): void {
     if (!this.session.user()) {
@@ -74,8 +110,8 @@ export class CatalogComponent extends Page implements OnInit {
     void this.execute(async () => {
       if (this.wishlist) {
         await this.api.delete("/customer/wishlist/" + product.id);
-        this.products = this.products.filter((p) => p.id !== product.id);
-        this.total = this.products.length;
+        this.rawWishlist = this.rawWishlist.filter((p) => p.id !== product.id);
+        this.applyWishlistFilter();
       } else {
         await this.api.put("/customer/wishlist/" + product.id, {});
         this.session.notify("Guardado en favoritos.");

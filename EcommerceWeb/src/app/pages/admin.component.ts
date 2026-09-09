@@ -181,20 +181,26 @@ interface CouponDraft {
           <input
             name="productSearch"
             [(ngModel)]="search"
+            (ngModelChange)="productFiltersChanged()"
             maxlength="120"
             placeholder="Nombre del producto"
           />
         </label>
         <label
           >Categoría
-          <select name="productCategory" [(ngModel)]="categoryFilter">
+          <select
+            name="productCategory"
+            [(ngModel)]="categoryFilter"
+            (ngModelChange)="productFiltersChanged(0)"
+          >
             <option value="">Todas</option>
             @for (category of categories; track category.id) {
               <option [value]="category.id">{{ category.name }}</option>
             }
           </select>
         </label>
-        <button [disabled]="busy">Buscar</button>
+        <button [disabled]="busy">Actualizar ahora</button>
+        <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
       </form>
 
       <div class="split">
@@ -389,7 +395,7 @@ interface CouponDraft {
       </div>
 
       @if (productTotalPages > 1) {
-        <div class="pagination">
+        <nav class="pagination" aria-label="Páginas de productos">
           <button
             type="button"
             class="secondary"
@@ -398,7 +404,19 @@ interface CouponDraft {
           >
             Anterior
           </button>
-          <span>Página {{ productPage + 1 }} de {{ productTotalPages }}</span>
+          <div class="page-numbers">
+            @for (pageNumber of pageNumbers(productPage, productTotalPages); track pageNumber) {
+              <button
+                type="button"
+                class="page-number"
+                [class.active]="pageNumber === productPage"
+                [attr.aria-current]="pageNumber === productPage ? 'page' : null"
+                [disabled]="busy"
+                (click)="goToProductPage(pageNumber)"
+              >{{ pageNumber + 1 }}</button>
+            }
+          </div>
+          <span class="page-summary">Página {{ productPage + 1 }} de {{ productTotalPages }}</span>
           <button
             type="button"
             class="secondary"
@@ -407,7 +425,7 @@ interface CouponDraft {
           >
             Siguiente
           </button>
-        </div>
+        </nav>
       }
     </section>
 
@@ -475,6 +493,19 @@ interface CouponDraft {
         </form>
 
         <div class="panel table-wrap">
+          <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+            <label class="grow"
+              >Buscar categoría
+              <input
+                name="categorySearch"
+                [(ngModel)]="categorySearch"
+                (ngModelChange)="categorySearchChanged()"
+                maxlength="80"
+                placeholder="Nombre o descripción"
+              />
+            </label>
+            <small class="live-search-hint">Filtro en vivo mientras escribes.</small>
+          </form>
           <table class="admin-table">
             <thead>
               <tr>
@@ -484,7 +515,7 @@ interface CouponDraft {
               </tr>
             </thead>
             <tbody>
-              @for (category of categories; track category.id) {
+              @for (category of pagedCategories; track category.id) {
                 <tr>
                   <td>
                     <strong>{{ category.name }}</strong>
@@ -512,11 +543,40 @@ interface CouponDraft {
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="3">Aún no hay categorías.</td>
+                  <td colspan="3">{{ categorySearch.trim() ? "No hay categorías para esta búsqueda." : "Aún no hay categorías." }}</td>
                 </tr>
               }
             </tbody>
           </table>
+          @if (categoryTotalPages > 1) {
+            <nav class="pagination compact-pagination" aria-label="Páginas de categorías">
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="busy || categoryPage === 0"
+                (click)="turnCategories(-1)"
+              >Anterior</button>
+              <div class="page-numbers">
+                @for (pageNumber of pageNumbers(categoryPage, categoryTotalPages); track pageNumber) {
+                  <button
+                    type="button"
+                    class="page-number"
+                    [class.active]="pageNumber === categoryPage"
+                    [attr.aria-current]="pageNumber === categoryPage ? 'page' : null"
+                    [disabled]="busy"
+                    (click)="goToCategoryPage(pageNumber)"
+                  >{{ pageNumber + 1 }}</button>
+                }
+              </div>
+              <span class="page-summary">Página {{ categoryPage + 1 }} de {{ categoryTotalPages }}</span>
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="busy || categoryPage + 1 >= categoryTotalPages"
+                (click)="turnCategories(1)"
+              >Siguiente</button>
+            </nav>
+          }
         </div>
       </div>
     </section>
@@ -592,6 +652,19 @@ interface CouponDraft {
         </form>
 
         <div class="panel table-wrap">
+          <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+            <label class="grow"
+              >Buscar cupón
+              <input
+                name="couponSearch"
+                [(ngModel)]="couponSearch"
+                (ngModelChange)="couponSearchChanged()"
+                maxlength="30"
+                placeholder="Código, descuento o estado"
+              />
+            </label>
+            <small class="live-search-hint">Filtro en vivo mientras escribes.</small>
+          </form>
           <table class="admin-table">
             <thead>
               <tr>
@@ -603,7 +676,7 @@ interface CouponDraft {
               </tr>
             </thead>
             <tbody>
-              @for (coupon of coupons; track coupon.id) {
+              @for (coupon of pagedCoupons; track coupon.id) {
                 <tr>
                   <td>
                     <strong>{{ coupon.code }}</strong>
@@ -637,11 +710,40 @@ interface CouponDraft {
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5">Aún no hay cupones.</td>
+                  <td colspan="5">{{ couponSearch.trim() ? "No hay cupones para esta búsqueda." : "Aún no hay cupones." }}</td>
                 </tr>
               }
             </tbody>
           </table>
+          @if (couponTotalPages > 1) {
+            <nav class="pagination compact-pagination" aria-label="Páginas de cupones">
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="busy || couponPage === 0"
+                (click)="turnCoupons(-1)"
+              >Anterior</button>
+              <div class="page-numbers">
+                @for (pageNumber of pageNumbers(couponPage, couponTotalPages); track pageNumber) {
+                  <button
+                    type="button"
+                    class="page-number"
+                    [class.active]="pageNumber === couponPage"
+                    [attr.aria-current]="pageNumber === couponPage ? 'page' : null"
+                    [disabled]="busy"
+                    (click)="goToCouponPage(pageNumber)"
+                  >{{ pageNumber + 1 }}</button>
+                }
+              </div>
+              <span class="page-summary">Página {{ couponPage + 1 }} de {{ couponTotalPages }}</span>
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="busy || couponPage + 1 >= couponTotalPages"
+                (click)="turnCoupons(1)"
+              >Siguiente</button>
+            </nav>
+          }
         </div>
       </div>
     </section>
@@ -655,6 +757,33 @@ interface CouponDraft {
         <span class="muted">{{ users.length }} usuarios</span>
       </div>
       <div class="panel table-wrap">
+        <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+          <label class="grow"
+            >Buscar usuario
+            <input
+              name="userSearch"
+              [(ngModel)]="userSearch"
+              (ngModelChange)="userFiltersChanged()"
+              maxlength="120"
+              placeholder="Nombre o correo del usuario"
+            />
+          </label>
+          <label
+            >Filtrar por rol
+            <select
+              name="userRoleFilter"
+              [(ngModel)]="userRoleFilter"
+              (ngModelChange)="userFiltersChanged()"
+            >
+              <option value="">Todos los roles</option>
+              <option value="CUSTOMER">Cliente</option>
+              <option value="ADMIN">Administrador</option>
+              <option value="INVENTORY_MANAGER">Gestor de inventario</option>
+              <option value="CUSTOMER_SUPPORT">Soporte al cliente</option>
+            </select>
+          </label>
+          <small class="live-search-hint">Filtro en vivo mientras escribes.</small>
+        </form>
         <table class="admin-table">
           <thead>
             <tr>
@@ -665,7 +794,7 @@ interface CouponDraft {
             </tr>
           </thead>
           <tbody>
-            @for (user of users; track user.id) {
+            @for (user of pagedUsers; track user.id) {
               <tr>
                 <td>
                   <strong>{{ user.name }}</strong>
@@ -695,11 +824,40 @@ interface CouponDraft {
               </tr>
             } @empty {
               <tr>
-                <td colspan="4">Aún no hay usuarios.</td>
+                <td colspan="4">{{ userSearch.trim() || userRoleFilter ? "No hay usuarios para este filtro." : "Aún no hay usuarios." }}</td>
               </tr>
             }
           </tbody>
         </table>
+        @if (userTotalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de usuarios">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || userPage === 0"
+              (click)="turnUsers(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(userPage, userTotalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === userPage"
+                  [attr.aria-current]="pageNumber === userPage ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToUserPage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ userPage + 1 }} de {{ userTotalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || userPage + 1 >= userTotalPages"
+              (click)="turnUsers(1)"
+            >Siguiente</button>
+          </nav>
+        }
       </div>
     </section>
 
@@ -805,9 +963,120 @@ export class AdminComponent extends Page implements OnInit {
   productTotalPages = 0;
   totalProducts = 0;
 
+  categorySearch = "";
+  categoryPage = 0;
+  readonly categoryPageSize = 8;
+
+  couponSearch = "";
+  couponPage = 0;
+  readonly couponPageSize = 8;
+
+  userSearch = "";
+  userRoleFilter = "";
+  userPage = 0;
+  readonly userPageSize = 8;
+
   productDraft: ProductDraft = this.emptyProduct();
   categoryDraft: CategoryDraft = this.emptyCategory();
   couponDraft: CouponDraft = this.emptyCoupon();
+
+  get filteredCategories(): Category[] {
+    const query = this.categorySearch.trim();
+    if (!query) return this.categories;
+    return this.categories.filter((cat) =>
+      this.matchesSearch(query, cat.name, cat.description)
+    );
+  }
+
+  get pagedCategories(): Category[] {
+    return this.paginate(this.filteredCategories, this.categoryPage, this.categoryPageSize);
+  }
+
+  get categoryTotalPages(): number {
+    return this.pageCount(this.filteredCategories.length, this.categoryPageSize);
+  }
+
+  categorySearchChanged(): void {
+    this.categoryPage = 0;
+  }
+
+  goToCategoryPage(page: number): void {
+    if (page < 0 || page >= this.categoryTotalPages || page === this.categoryPage) return;
+    this.categoryPage = page;
+  }
+
+  turnCategories(direction: number): void {
+    this.goToCategoryPage(this.categoryPage + direction);
+  }
+
+  get filteredCoupons(): Coupon[] {
+    const query = this.couponSearch.trim();
+    if (!query) return this.coupons;
+    return this.coupons.filter((c) =>
+      this.matchesSearch(query, c.code, c.discountPercent, c.expiresOn, c.active ? "activo" : "inactivo")
+    );
+  }
+
+  get pagedCoupons(): Coupon[] {
+    return this.paginate(this.filteredCoupons, this.couponPage, this.couponPageSize);
+  }
+
+  get couponTotalPages(): number {
+    return this.pageCount(this.filteredCoupons.length, this.couponPageSize);
+  }
+
+  couponSearchChanged(): void {
+    this.couponPage = 0;
+  }
+
+  goToCouponPage(page: number): void {
+    if (page < 0 || page >= this.couponTotalPages || page === this.couponPage) return;
+    this.couponPage = page;
+  }
+
+  turnCoupons(direction: number): void {
+    this.goToCouponPage(this.couponPage + direction);
+  }
+
+  get filteredUsers(): User[] {
+    const query = this.userSearch.trim();
+    return this.users.filter((u) => {
+      const matchRole = !this.userRoleFilter || u.role === this.userRoleFilter;
+      const matchText = !query || this.matchesSearch(query, u.name, u.email, this.roleLabels[u.role]);
+      return matchRole && matchText;
+    });
+  }
+
+  get pagedUsers(): User[] {
+    return this.paginate(this.filteredUsers, this.userPage, this.userPageSize);
+  }
+
+  get userTotalPages(): number {
+    return this.pageCount(this.filteredUsers.length, this.userPageSize);
+  }
+
+  userFiltersChanged(): void {
+    this.userPage = 0;
+  }
+
+  goToUserPage(page: number): void {
+    if (page < 0 || page >= this.userTotalPages || page === this.userPage) return;
+    this.userPage = page;
+  }
+
+  turnUsers(direction: number): void {
+    this.goToUserPage(this.userPage + direction);
+  }
+
+  productFiltersChanged(delay = 300): void {
+    this.debounce("admin-products", () => this.loadProducts(true), delay);
+  }
+
+  goToProductPage(page: number): void {
+    if (page < 0 || page >= this.productTotalPages || page === this.productPage) return;
+    this.productPage = page;
+    this.loadProducts();
+  }
 
   ngOnInit(): void {
     this.load();
@@ -846,8 +1115,7 @@ export class AdminComponent extends Page implements OnInit {
   }
 
   turnProducts(direction: number): void {
-    this.productPage += direction;
-    this.loadProducts();
+    this.goToProductPage(this.productPage + direction);
   }
 
   editProduct(product: Product): void {

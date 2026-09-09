@@ -7,7 +7,7 @@ Tienda de demostración completa para aprender un flujo de comercio electrónico
 ## Tecnologías y requisitos
 
 - Java JDK 21.
-- Node.js 20 LTS o 22 y npm.
+- Node.js 20.19 o posterior, 22.12 o posterior, o Node.js 24, junto con npm.
 - No es necesario instalar Maven: el backend incluye Maven Wrapper.
 - SQL Server solo es necesario para el perfil de producción. El modo local usa una base H2 incluida en el proyecto.
 

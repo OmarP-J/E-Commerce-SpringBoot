@@ -1,11 +1,12 @@
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { Component, OnInit, inject } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { Order, OrderStatus, statusLabels } from "../core/models";
 import { Page } from "../core/page";
 
 @Component({
-  imports: [CurrencyPipe, DatePipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, FormsModule],
   template: `
     @if (adminView) {
       <nav
@@ -36,12 +37,41 @@ import { Page } from "../core/page";
       </button>
     </div>
 
+    <form class="filters" (ngSubmit)="$event.preventDefault()">
+      <label class="grow"
+        >Buscar pedido
+        <input
+          name="orderSearch"
+          [(ngModel)]="search"
+          (ngModelChange)="filtersChanged()"
+          maxlength="120"
+          placeholder="Número de pedido, cliente, producto o dirección"
+        />
+      </label>
+      <label
+        >Estado
+        <select
+          name="orderStatusFilter"
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="filtersChanged()"
+        >
+          <option value="">Todos los estados</option>
+          <option value="CONFIRMED">Confirmado</option>
+          <option value="PROCESSING">En preparación</option>
+          <option value="SHIPPED">En camino</option>
+          <option value="DELIVERED">Entregado</option>
+          <option value="CANCELLED">Cancelado</option>
+        </select>
+      </label>
+      <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
+    </form>
+
     @if (busy && orders.length === 0) {
       <p role="status">Cargando pedidos…</p>
     }
 
     <div class="order-list">
-      @for (order of orders; track order.id) {
+      @for (order of pagedOrders; track order.id) {
         <article class="panel order-card">
           <div class="order-head">
             <div>
@@ -136,12 +166,14 @@ import { Page } from "../core/page";
           <section class="empty panel">
             <h2>
               {{
-                adminView
-                  ? "Aún no hay pedidos."
-                  : "Todavía no has realizado una compra."
+                search.trim() || statusFilter
+                  ? "No hay pedidos para este filtro."
+                  : adminView
+                    ? "Aún no hay pedidos."
+                    : "Todavía no has realizado una compra."
               }}
             </h2>
-            @if (!adminView) {
+            @if (!adminView && !search.trim() && !statusFilter) {
               <p>Cuando confirmes una compra podrás seguirla desde aquí.</p>
               <a class="button" routerLink="/catalog">Ir al catálogo</a>
             }
@@ -149,12 +181,85 @@ import { Page } from "../core/page";
         }
       }
     </div>
+
+    @if (totalPages > 1) {
+      <nav class="pagination" aria-label="Páginas de pedidos">
+        <button
+          type="button"
+          class="secondary"
+          [disabled]="busy || page === 0"
+          (click)="turn(-1)"
+        >Anterior</button>
+        <div class="page-numbers">
+          @for (pageNumber of pageNumbers(page, totalPages); track pageNumber) {
+            <button
+              type="button"
+              class="page-number"
+              [class.active]="pageNumber === page"
+              [attr.aria-current]="pageNumber === page ? 'page' : null"
+              [disabled]="busy"
+              (click)="goToPage(pageNumber)"
+            >{{ pageNumber + 1 }}</button>
+          }
+        </div>
+        <span class="page-summary">Página {{ page + 1 }} de {{ totalPages }}</span>
+        <button
+          type="button"
+          class="secondary"
+          [disabled]="busy || page + 1 >= totalPages"
+          (click)="turn(1)"
+        >Siguiente</button>
+      </nav>
+    }
   `,
 })
 export class OrdersComponent extends Page implements OnInit {
   readonly adminView = !!inject(ActivatedRoute).snapshot.data["admin"];
   readonly labels = statusLabels;
   orders: Order[] = [];
+  search = "";
+  statusFilter = "";
+  page = 0;
+  readonly pageSize = 6;
+
+  get filteredOrders(): Order[] {
+    const query = this.search.trim();
+    return this.orders.filter((order) => {
+      const matchStatus = !this.statusFilter || order.status === this.statusFilter;
+      const matchText = !query || this.matchesSearch(
+        query,
+        order.id,
+        order.customerName,
+        order.phone,
+        order.address,
+        order.couponCode,
+        this.labels[order.status],
+        order.lines?.map((l) => l.productName).join(" "),
+      );
+      return matchStatus && matchText;
+    });
+  }
+
+  get pagedOrders(): Order[] {
+    return this.paginate(this.filteredOrders, this.page, this.pageSize);
+  }
+
+  get totalPages(): number {
+    return this.pageCount(this.filteredOrders.length, this.pageSize);
+  }
+
+  filtersChanged(): void {
+    this.page = 0;
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages || page === this.page) return;
+    this.page = page;
+  }
+
+  turn(direction: number): void {
+    this.goToPage(this.page + direction);
+  }
 
   ngOnInit(): void {
     this.load();
@@ -164,6 +269,9 @@ export class OrdersComponent extends Page implements OnInit {
     void this.execute(async () => {
       const path = this.adminView ? "/admin/orders" : "/customer/orders";
       this.orders = await this.api.get<Order[]>(path);
+      if (this.page >= this.totalPages && this.totalPages > 0) {
+        this.page = this.totalPages - 1;
+      }
     });
   }
 

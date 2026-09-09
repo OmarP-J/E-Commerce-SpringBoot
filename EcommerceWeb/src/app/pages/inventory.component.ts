@@ -32,8 +32,8 @@ import { Page } from "../core/page";
     </div>
     <section class="metrics inventory-metrics">
       <article class="metric">
-        <small>Productos</small><strong>{{ products.length }}</strong
-        ><span>en esta vista</span>
+        <small>Productos encontrados</small><strong>{{ totalProducts }}</strong
+        ><span>{{ products.length }} en esta página</span>
       </article>
       <article class="metric">
         <small>Alertas de stock</small><strong>{{ lowStock.length }}</strong
@@ -49,9 +49,11 @@ import { Page } from "../core/page";
         >Buscar producto<input
           name="search"
           [(ngModel)]="search"
+          (ngModelChange)="searchChanged()"
           maxlength="120"
           placeholder="Busca con o sin tildes" /></label
-      ><button [disabled]="busy">Buscar</button>
+      ><button [disabled]="busy">Actualizar ahora</button>
+      <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
     </form>
     <div class="workspace-grid inventory-workspace">
       <section class="panel table-wrap">
@@ -102,6 +104,35 @@ import { Page } from "../core/page";
             }
           </tbody>
         </table>
+        @if (productTotalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de inventario">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || productPage === 0"
+              (click)="turnProducts(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(productPage, productTotalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === productPage"
+                  [attr.aria-current]="pageNumber === productPage ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToProductPage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ productPage + 1 }} de {{ productTotalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || productPage + 1 >= productTotalPages"
+              (click)="turnProducts(1)"
+            >Siguiente</button>
+          </nav>
+        }
       </section>
       <form
         class="panel stack"
@@ -157,9 +188,22 @@ import { Page } from "../core/page";
           <p class="eyebrow">TRAZABILIDAD</p>
           <h2>Últimos movimientos</h2>
         </div>
-        <span class="muted">Hasta 100 registros</span>
+        <span class="muted">{{ filteredMovements.length }} registros</span>
       </div>
       <div class="panel table-wrap">
+        <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+          <label class="grow"
+            >Buscar movimiento
+            <input
+              name="movementSearch"
+              [(ngModel)]="movementSearch"
+              (ngModelChange)="movementSearchChanged()"
+              maxlength="100"
+              placeholder="Producto, usuario, tipo o nota"
+            />
+          </label>
+          <small class="live-search-hint">Filtro en tiempo real mientras escribes.</small>
+        </form>
         <table class="admin-table">
           <thead>
             <tr>
@@ -173,7 +217,7 @@ import { Page } from "../core/page";
             </tr>
           </thead>
           <tbody>
-            @for (movement of movements; track movement.id) {
+            @for (movement of pagedMovements; track movement.id) {
               <tr>
                 <td>{{ movement.createdAt | date: "d/M/y, h:mm a" }}</td>
                 <td>
@@ -193,12 +237,41 @@ import { Page } from "../core/page";
             } @empty {
               <tr>
                 <td colspan="7">
-                  Aún no se han registrado movimientos manuales.
+                  {{ movementSearch.trim() ? "No hay movimientos para esta búsqueda." : "Aún no se han registrado movimientos manuales." }}
                 </td>
               </tr>
             }
           </tbody>
         </table>
+        @if (movementTotalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de movimientos">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || movementPage === 0"
+              (click)="turnMovements(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(movementPage, movementTotalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === movementPage"
+                  [attr.aria-current]="pageNumber === movementPage ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToMovementPage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ movementPage + 1 }} de {{ movementTotalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || movementPage + 1 >= movementTotalPages"
+              (click)="turnMovements(1)"
+            >Siguiente</button>
+          </nav>
+        }
       </div>
     </section>
   `,
@@ -214,6 +287,51 @@ export class InventoryComponent extends Page implements OnInit {
   movements: InventoryMovement[] = [];
   selected: Product | null = null;
   search = "";
+  productPage = 0;
+  productTotalPages = 0;
+  totalProducts = 0;
+  readonly productPageSize = 12;
+
+  movementSearch = "";
+  movementPage = 0;
+  readonly movementPageSize = 10;
+
+  get filteredMovements(): InventoryMovement[] {
+    const query = this.movementSearch.trim();
+    if (!query) return this.movements;
+    return this.movements.filter((m) =>
+      this.matchesSearch(
+        query,
+        m.productName,
+        m.performedBy,
+        m.note,
+        this.movementLabels[m.type],
+        m.quantityDelta,
+      ),
+    );
+  }
+
+  get pagedMovements(): InventoryMovement[] {
+    return this.paginate(this.filteredMovements, this.movementPage, this.movementPageSize);
+  }
+
+  get movementTotalPages(): number {
+    return this.pageCount(this.filteredMovements.length, this.movementPageSize);
+  }
+
+  movementSearchChanged(): void {
+    this.movementPage = 0;
+  }
+
+  goToMovementPage(page: number): void {
+    if (page < 0 || page >= this.movementTotalPages || page === this.movementPage) return;
+    this.movementPage = page;
+  }
+
+  turnMovements(direction: number): void {
+    this.goToMovementPage(this.movementPage + direction);
+  }
+
   movementType: InventoryMovementType = "ENTRY";
   quantity = 1;
   note = "";
@@ -223,22 +341,35 @@ export class InventoryComponent extends Page implements OnInit {
   ngOnInit(): void {
     this.load();
   }
-  load(): void {
+  load(resetPage = false): void {
+    if (resetPage) this.productPage = 0;
     void this.execute(async () => {
       const [page, alerts, history] = await Promise.all([
         this.api.get<PageResult<Product>>(
-          "/inventory/products?size=100&q=" + encodeURIComponent(this.search),
+          "/inventory/products?" + this.productQuery(),
         ),
         this.api.get<Product[]>("/inventory/low-stock"),
         this.api.get<InventoryMovement[]>("/inventory/movements"),
       ]);
-      this.products = page.items;
+      this.setProducts(page);
       this.lowStock = alerts;
       this.movements = history;
       this.syncSelected();
     });
   }
   searchProducts(): void {
+    this.load(true);
+  }
+  searchChanged(): void {
+    this.debounce("inventory-search", () => this.load(true));
+  }
+  turnProducts(direction: number): void {
+    this.goToProductPage(this.productPage + direction);
+  }
+  goToProductPage(page: number): void {
+    if (page < 0 || page >= this.productTotalPages || page === this.productPage)
+      return;
+    this.productPage = page;
     this.load();
   }
   select(product: Product): void {
@@ -261,12 +392,12 @@ export class InventoryComponent extends Page implements OnInit {
       this.quantity = 1;
       const [page, alerts, history] = await Promise.all([
         this.api.get<PageResult<Product>>(
-          "/inventory/products?size=100&q=" + encodeURIComponent(this.search),
+          "/inventory/products?" + this.productQuery(),
         ),
         this.api.get<Product[]>("/inventory/low-stock"),
         this.api.get<InventoryMovement[]>("/inventory/movements"),
       ]);
-      this.products = page.items;
+      this.setProducts(page);
       this.lowStock = alerts;
       this.movements = history;
       this.syncSelected();
@@ -278,5 +409,18 @@ export class InventoryComponent extends Page implements OnInit {
       this.selected =
         this.products.find((product) => product.id === this.selected!.id) ??
         null;
+  }
+  private productQuery(): string {
+    return new URLSearchParams({
+      q: this.search,
+      page: String(this.productPage),
+      size: String(this.productPageSize),
+    }).toString();
+  }
+  private setProducts(page: PageResult<Product>): void {
+    this.products = page.items;
+    this.totalProducts = page.total;
+    this.productPage = page.page;
+    this.productTotalPages = page.totalPages;
   }
 }

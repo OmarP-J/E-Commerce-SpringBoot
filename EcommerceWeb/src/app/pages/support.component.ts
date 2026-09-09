@@ -50,9 +50,37 @@ import { Page } from "../core/page";
             <p class="eyebrow">BANDEJA</p>
             <h2>Solicitudes</h2>
           </div>
-          <span class="muted">{{ cases.length }} casos</span>
+          <span class="muted">{{ filteredCases.length }} casos</span>
         </div>
-        @for (item of cases; track item.id) {
+        <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+          <label class="grow"
+            >Buscar solicitud
+            <input
+              name="caseSearch"
+              [(ngModel)]="caseSearch"
+              (ngModelChange)="caseFiltersChanged()"
+              maxlength="100"
+              placeholder="Caso #, pedido #, cliente o motivo"
+            />
+          </label>
+          <label
+            >Estado
+            <select
+              name="caseStatusFilter"
+              [(ngModel)]="caseStatusFilter"
+              (ngModelChange)="caseFiltersChanged()"
+            >
+              <option value="">Todos</option>
+              <option value="OPEN">Abierto</option>
+              <option value="IN_REVIEW">En revisión</option>
+              <option value="APPROVED">Aprobado</option>
+              <option value="REJECTED">Rechazado</option>
+              <option value="RESOLVED">Resuelto</option>
+            </select>
+          </label>
+          <small class="live-search-hint">Filtro en tiempo real mientras escribes.</small>
+        </form>
+        @for (item of pagedCases; track item.id) {
           <button
             type="button"
             class="panel case-button"
@@ -68,10 +96,39 @@ import { Page } from "../core/page";
         } @empty {
           @if (!busy) {
             <section class="empty panel">
-              <h2>No hay solicitudes.</h2>
-              <p>La bandeja está al día.</p>
+              <h2>{{ caseSearch.trim() || caseStatusFilter ? "No hay solicitudes para este filtro." : "No hay solicitudes." }}</h2>
+              <p>{{ caseSearch.trim() || caseStatusFilter ? "Prueba cambiando los términos de búsqueda." : "La bandeja está al día." }}</p>
             </section>
           }
+        }
+        @if (caseTotalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de solicitudes">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || casePage === 0"
+              (click)="turnCases(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(casePage, caseTotalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === casePage"
+                  [attr.aria-current]="pageNumber === casePage ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToCasePage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ casePage + 1 }} de {{ caseTotalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || casePage + 1 >= caseTotalPages"
+              (click)="turnCases(1)"
+            >Siguiente</button>
+          </nav>
         }
       </section>
       <form
@@ -145,9 +202,37 @@ import { Page } from "../core/page";
           <p class="eyebrow">CONSULTA</p>
           <h2>Todos los pedidos</h2>
         </div>
-        <span class="muted">{{ orders.length }} pedidos</span>
+        <span class="muted">{{ filteredOrders.length }} pedidos</span>
       </div>
       <div class="panel table-wrap">
+        <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+          <label class="grow"
+            >Buscar pedido
+            <input
+              name="orderSearch"
+              [(ngModel)]="orderSearch"
+              (ngModelChange)="orderFiltersChanged()"
+              maxlength="100"
+              placeholder="Pedido #, cliente, teléfono, dirección o total"
+            />
+          </label>
+          <label
+            >Estado
+            <select
+              name="orderStatusFilter"
+              [(ngModel)]="orderStatusFilter"
+              (ngModelChange)="orderFiltersChanged()"
+            >
+              <option value="">Todos los estados</option>
+              <option value="CONFIRMED">Confirmado</option>
+              <option value="PROCESSING">En preparación</option>
+              <option value="SHIPPED">En camino</option>
+              <option value="DELIVERED">Entregado</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
+          </label>
+          <small class="live-search-hint">Filtro en tiempo real mientras escribes.</small>
+        </form>
         <table class="admin-table">
           <thead>
             <tr>
@@ -161,7 +246,7 @@ import { Page } from "../core/page";
             </tr>
           </thead>
           <tbody>
-            @for (order of orders; track order.id) {
+            @for (order of pagedOrders; track order.id) {
               <tr>
                 <td>
                   <strong>#{{ order.id }}</strong>
@@ -181,11 +266,42 @@ import { Page } from "../core/page";
               </tr>
             } @empty {
               <tr>
-                <td colspan="7">Aún no hay pedidos.</td>
+                <td colspan="7">
+                  {{ orderSearch.trim() || orderStatusFilter ? "No hay pedidos para este filtro." : "Aún no hay pedidos." }}
+                </td>
               </tr>
             }
           </tbody>
         </table>
+        @if (orderTotalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de pedidos en soporte">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || orderPage === 0"
+              (click)="turnOrders(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(orderPage, orderTotalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === orderPage"
+                  [attr.aria-current]="pageNumber === orderPage ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToOrderPage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ orderPage + 1 }} de {{ orderTotalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || orderPage + 1 >= orderTotalPages"
+              (click)="turnOrders(1)"
+            >Siguiente</button>
+          </nav>
+        }
       </div>
     </section>
   `,
@@ -211,6 +327,95 @@ export class SupportComponent extends Page implements OnInit {
   status: SupportCaseStatus = "OPEN";
   resolution = "";
   refundAmount = 0;
+
+  caseSearch = "";
+  caseStatusFilter = "";
+  casePage = 0;
+  readonly casePageSize = 5;
+
+  orderSearch = "";
+  orderStatusFilter = "";
+  orderPage = 0;
+  readonly orderPageSize = 8;
+
+  get filteredCases(): SupportCase[] {
+    const query = this.caseSearch.trim();
+    return this.cases.filter((item) => {
+      const matchStatus = !this.caseStatusFilter || item.status === this.caseStatusFilter;
+      const matchQuery = !query || this.matchesSearch(
+        query,
+        item.id,
+        item.orderId,
+        item.customerName,
+        item.customerEmail,
+        item.reason,
+        this.typeLabels[item.type],
+        this.caseStatusLabels[item.status],
+      );
+      return matchStatus && matchQuery;
+    });
+  }
+
+  get pagedCases(): SupportCase[] {
+    return this.paginate(this.filteredCases, this.casePage, this.casePageSize);
+  }
+
+  get caseTotalPages(): number {
+    return this.pageCount(this.filteredCases.length, this.casePageSize);
+  }
+
+  caseFiltersChanged(): void {
+    this.casePage = 0;
+  }
+
+  goToCasePage(page: number): void {
+    if (page < 0 || page >= this.caseTotalPages || page === this.casePage) return;
+    this.casePage = page;
+  }
+
+  turnCases(direction: number): void {
+    this.goToCasePage(this.casePage + direction);
+  }
+
+  get filteredOrders(): Order[] {
+    const query = this.orderSearch.trim();
+    return this.orders.filter((order) => {
+      const matchStatus = !this.orderStatusFilter || order.status === this.orderStatusFilter;
+      const matchQuery = !query || this.matchesSearch(
+        query,
+        order.id,
+        order.customerName,
+        order.phone,
+        order.address,
+        order.total,
+        this.orderStatusLabels[order.status],
+        this.paymentLabel(order.paymentStatus),
+      );
+      return matchStatus && matchQuery;
+    });
+  }
+
+  get pagedOrders(): Order[] {
+    return this.paginate(this.filteredOrders, this.orderPage, this.orderPageSize);
+  }
+
+  get orderTotalPages(): number {
+    return this.pageCount(this.filteredOrders.length, this.orderPageSize);
+  }
+
+  orderFiltersChanged(): void {
+    this.orderPage = 0;
+  }
+
+  goToOrderPage(page: number): void {
+    if (page < 0 || page >= this.orderTotalPages || page === this.orderPage) return;
+    this.orderPage = page;
+  }
+
+  turnOrders(direction: number): void {
+    this.goToOrderPage(this.orderPage + direction);
+  }
+
   get openCases(): number {
     return this.cases.filter((item) => item.status === "OPEN").length;
   }
