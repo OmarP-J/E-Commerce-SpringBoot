@@ -43,7 +43,6 @@
       </select>
     </label>
     <button [disabled]="busy">Actualizar ahora</button>
-    <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
   </form>
 } @else {
   <form class="filters catalog-filters" (ngSubmit)="load(true)">
@@ -58,7 +57,7 @@
       />
     </label>
     <button [disabled]="busy">Actualizar ahora</button>
-    <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
+    <!-- <small class="live-search-hint">Los resultados cambian mientras escribes.</small> -->
   </form>
 }
 

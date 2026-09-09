@@ -63,7 +63,6 @@ import { Page } from "../core/page";
           <option value="CANCELLED">Cancelado</option>
         </select>
       </label>
-      <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
     </form>
 
     @if (busy && orders.length === 0) {

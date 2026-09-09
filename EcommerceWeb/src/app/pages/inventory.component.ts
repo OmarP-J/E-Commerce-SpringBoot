@@ -53,7 +53,6 @@ import { Page } from "../core/page";
           maxlength="120"
           placeholder="Busca con o sin tildes" /></label
       ><button [disabled]="busy">Actualizar ahora</button>
-      <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
     </form>
     <div class="workspace-grid inventory-workspace">
       <section class="panel table-wrap">
