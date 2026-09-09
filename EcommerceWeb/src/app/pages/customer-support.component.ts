@@ -73,7 +73,22 @@ import { Page } from "../core/page";
         }
       </form>
       <section class="card-list">
-        @for (item of cases; track item.id) {
+        @if (cases.length > 0) {
+          <form class="filters compact-filters" (ngSubmit)="$event.preventDefault()">
+            <label class="grow"
+              >Buscar solicitud
+              <input
+                name="customerCaseSearch"
+                [(ngModel)]="search"
+                (ngModelChange)="searchChanged()"
+                maxlength="80"
+                placeholder="Motivo, caso # o pedido #"
+              />
+            </label>
+            <small class="live-search-hint">Filtro en vivo mientras escribes.</small>
+          </form>
+        }
+        @for (item of pagedCases; track item.id) {
           <article class="panel support-card">
             <div class="order-head">
               <div>
@@ -103,10 +118,39 @@ import { Page } from "../core/page";
         } @empty {
           @if (!busy) {
             <section class="empty panel">
-              <h2>Aún no has enviado solicitudes.</h2>
-              <p>Cuando necesites ayuda podrás seguir la respuesta aquí.</p>
+              <h2>{{ search.trim() ? "No hay solicitudes para este filtro." : "Aún no has enviado solicitudes." }}</h2>
+              <p>{{ search.trim() ? "Prueba con otros términos de búsqueda." : "Cuando necesites ayuda podrás seguir la respuesta aquí." }}</p>
             </section>
           }
+        }
+        @if (totalPages > 1) {
+          <nav class="pagination compact-pagination" aria-label="Páginas de solicitudes del cliente">
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || page === 0"
+              (click)="turn(-1)"
+            >Anterior</button>
+            <div class="page-numbers">
+              @for (pageNumber of pageNumbers(page, totalPages); track pageNumber) {
+                <button
+                  type="button"
+                  class="page-number"
+                  [class.active]="pageNumber === page"
+                  [attr.aria-current]="pageNumber === page ? 'page' : null"
+                  [disabled]="busy"
+                  (click)="goToPage(pageNumber)"
+                >{{ pageNumber + 1 }}</button>
+              }
+            </div>
+            <span class="page-summary">Página {{ page + 1 }} de {{ totalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="busy || page + 1 >= totalPages"
+              (click)="turn(1)"
+            >Siguiente</button>
+          </nav>
         }
       </section>
     </div>
@@ -131,6 +175,46 @@ export class CustomerSupportComponent extends Page implements OnInit {
   orderId: number | null = null;
   type: SupportCaseType = "COMPLAINT";
   reason = "";
+  search = "";
+  page = 0;
+  readonly pageSize = 4;
+
+  get filteredCases(): SupportCase[] {
+    const query = this.search.trim();
+    if (!query) return this.cases;
+    return this.cases.filter((item) =>
+      this.matchesSearch(
+        query,
+        item.id,
+        item.orderId,
+        item.reason,
+        this.typeLabels[item.type],
+        this.statusLabels[item.status],
+      ),
+    );
+  }
+
+  get pagedCases(): SupportCase[] {
+    return this.paginate(this.filteredCases, this.page, this.pageSize);
+  }
+
+  get totalPages(): number {
+    return this.pageCount(this.filteredCases.length, this.pageSize);
+  }
+
+  searchChanged(): void {
+    this.page = 0;
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages || page === this.page) return;
+    this.page = page;
+  }
+
+  turn(direction: number): void {
+    this.goToPage(this.page + direction);
+  }
+
   ngOnInit(): void {
     this.load();
   }
@@ -140,6 +224,9 @@ export class CustomerSupportComponent extends Page implements OnInit {
         this.api.get<Order[]>("/customer/orders"),
         this.api.get<SupportCase[]>("/customer/support-cases"),
       ]);
+      if (this.page >= this.totalPages && this.totalPages > 0) {
+        this.page = this.totalPages - 1;
+      }
     });
   }
   create(): void {
