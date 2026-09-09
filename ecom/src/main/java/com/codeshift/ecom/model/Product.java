@@ -19,7 +19,7 @@ public class Product {
     private String description;
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
-    @Column(precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal cost = BigDecimal.ZERO;
     @Column(nullable = false)
     private int stock;
@@ -30,6 +30,7 @@ public class Product {
     @Lob
     @Basic(fetch = FetchType.LAZY)
     private byte[] image;
+    @Column(length = 40)
     private String imageType;
     @Version
     private long version;

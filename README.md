@@ -239,7 +239,7 @@ cd ecom
 .\mvnw.cmd test
 ```
 
-Las dieciséis pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa y disponibilidad de la documentación OpenAPI.
+Las dieciocho pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa, CORS, estado de la base y disponibilidad de la documentación OpenAPI.
 
 Compilación del frontend:
 
@@ -263,7 +263,7 @@ Ejemplo para PowerShell. Sustituye todos los valores de ejemplo:
 cd ecom
 
 $env:SPRING_PROFILES_ACTIVE = "prod"
-$env:DB_URL = "jdbc:sqlserver://sql.example.com:1433;databaseName=ecommerce;encrypt=true;trustServerCertificate=false"
+$env:DB_URL = "jdbc:sqlserver://mi-servidor.database.windows.net:1433;databaseName=ecommerce;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30"
 $env:DB_USERNAME = "ecommerce_app"
 $env:DB_PASSWORD = "CAMBIAR_POR_UN_SECRETO"
 $env:CLIENT_ORIGIN = "https://tienda.example.com"
@@ -281,6 +281,68 @@ $env:JWT_SECRET = [Convert]::ToBase64String($bytes)
 `APP_ADMIN_EMAIL` y `APP_ADMIN_PASSWORD` deben definirse juntas. La contraseña inicial debe tener al menos 12 caracteres y como máximo 72 bytes. El arranque crea la cuenta solo si el correo todavía no existe; nunca asciende una cuenta cliente ni cambia la contraseña de un administrador existente. Después del primer inicio correcto, retira las tres variables `APP_ADMIN_*` del entorno y administra la contraseña desde **Mi cuenta**.
 
 `JWT_SECRET` debe ser Base64 válido y representar al menos 32 bytes aleatorios. Si cambia, todas las sesiones existentes dejan de ser válidas. Guárdalo junto con `DB_PASSWORD` en el gestor de secretos del entorno de despliegue; no lo escribas en archivos del repositorio, capturas, mensajes o imágenes del contenedor.
+
+## Publicar el backend en Render con Azure SQL
+
+El proyecto incluye [render.yaml](render.yaml), [ecom/Dockerfile](ecom/Dockerfile) y un chequeo de salud en `/actuator/health`. La configuración usa Java 21, escucha automáticamente el puerto asignado por Render y ejecuta el perfil `prod`.
+
+### 1. Preparar Azure SQL
+
+1. Crea el servidor lógico y una base vacía en Azure SQL Database.
+2. Ejecuta [database/sqlserver-schema.sql](database/sqlserver-schema.sql) una sola vez dentro de esa base. Puedes usar el editor de consultas del portal, SQL Server Management Studio o Azure Data Studio.
+3. Crea un usuario de aplicación limitado a esa base. El backend necesita leer y modificar sus tablas; no necesita permisos para crear o eliminar tablas durante el uso normal. Por ejemplo, conectado a la base correcta con una cuenta administradora:
+
+```sql
+CREATE USER [ecommerce_app] WITH PASSWORD = 'REEMPLAZAR_CON_UN_SECRETO_LARGO';
+ALTER ROLE db_datareader ADD MEMBER [ecommerce_app];
+ALTER ROLE db_datawriter ADD MEMBER [ecommerce_app];
+```
+
+Usa `ecommerce_app` como `DB_USERNAME`. No escribas la contraseña real en ningún archivo del repositorio.
+
+4. No subas `ecom/data/ecommerce.mv.db`: ese archivo pertenece a H2 y no se puede importar directamente como una base de Azure SQL.
+
+Azure SQL bloquea por defecto las conexiones públicas no autorizadas. Después de crear el servicio en Render, abre **Connect > Outbound** en Render y copia todos los rangos de salida de la región del servicio. Agrégalos como reglas del firewall del servidor de Azure SQL. El servicio puede usar cualquiera de esas direcciones. La opción de Azure **Permitir que los servicios y recursos de Azure accedan a este servidor** no autoriza a Render, porque Render es un proveedor externo.
+
+### 2. Crear el servicio en Render
+
+La opción más directa es elegir **New > Blueprint**, conectar el repositorio y seleccionar el `render.yaml` de la raíz. También puedes crear manualmente un **Web Service** con estos valores:
+
+| Campo de Render | Valor |
+| --- | --- |
+| Runtime | `Docker` |
+| Dockerfile | `ecom/Dockerfile` |
+| Docker build context | `ecom` |
+| Health check path | `/actuator/health` |
+| Perfil inicial | `Free` para pruebas; usa un plan sin suspensión para operación continua |
+
+No configures `PORT`: Render lo proporciona y Spring Boot lo lee automáticamente. Define estas variables en el panel de Render:
+
+| Variable | Ejemplo o propósito |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `DB_URL` | `jdbc:sqlserver://mi-servidor.database.windows.net:1433;databaseName=ecommerce;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30` |
+| `DB_USERNAME` | Usuario de Azure SQL |
+| `DB_PASSWORD` | Contraseña de Azure SQL; marcar como secreta |
+| `CLIENT_ORIGIN` | URL pública exacta del frontend, por ejemplo `https://mi-tienda.onrender.com` |
+| `JWT_SECRET` | Base64 de 32 bytes aleatorios; el Blueprint lo genera automáticamente |
+| `APP_ADMIN_EMAIL` | Correo del primer administrador |
+| `APP_ADMIN_PASSWORD` | Contraseña inicial de 12 a 72 bytes |
+| `APP_ADMIN_NAME` | Nombre visible del administrador |
+
+`CLIENT_ORIGIN` acepta varios orígenes separados por comas cuando sea necesario, por ejemplo `https://tienda.example.com,https://www.tienda.example.com`. No uses `*`.
+
+### 3. Verificar el despliegue
+
+Cuando Render marque el servicio como **Live**, abre:
+
+```text
+https://TU-SERVICIO.onrender.com/actuator/health
+```
+
+Debe responder `{"status":"UP"}`. Ese estado también confirma que el backend logró consultar Azure SQL. Luego prueba el registro o inicio de sesión desde el frontend. Tras el primer arranque correcto, elimina `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD` y `APP_ADMIN_NAME` de Render; la cuenta permanece guardada en Azure SQL.
+
+Si el arranque falla con un error de conexión, revisa en este orden: nombre de servidor y base en `DB_URL`, usuario y contraseña, reglas de firewall para todos los rangos de salida de Render y acceso público de red en Azure SQL. Si falla con un error de validación de esquema, vuelve a ejecutar el script en la base correcta y revisa que no haya quedado a medias.
 
 Para publicar Angular:
 
