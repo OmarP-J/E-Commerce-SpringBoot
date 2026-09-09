@@ -56,7 +56,7 @@ CREATE TABLE shop_orders (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES shop_users(id),
     request_key NVARCHAR(36) NOT NULL,
-    created_at DATETIME2 NOT NULL,
+    created_at DATETIMEOFFSET(7) NOT NULL,
     customer_name NVARCHAR(80) NOT NULL,
     address NVARCHAR(300) NOT NULL,
     phone NVARCHAR(30) NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE inventory_movements (
     previous_stock INT NOT NULL,
     new_stock INT NOT NULL CHECK (new_stock >= 0),
     note NVARCHAR(300) NOT NULL,
-    created_at DATETIME2 NOT NULL
+    created_at DATETIMEOFFSET(7) NOT NULL
 );
 CREATE INDEX ix_inventory_created ON inventory_movements(created_at DESC);
 
@@ -116,8 +116,8 @@ CREATE TABLE support_cases (
     reason NVARCHAR(1000) NOT NULL,
     resolution NVARCHAR(1000) NULL,
     refund_amount DECIMAL(16,2) NOT NULL DEFAULT 0 CHECK (refund_amount >= 0),
-    created_at DATETIME2 NOT NULL,
-    updated_at DATETIME2 NOT NULL
+    created_at DATETIMEOFFSET(7) NOT NULL,
+    updated_at DATETIMEOFFSET(7) NOT NULL
 );
 CREATE INDEX ix_support_status_updated ON support_cases(status, updated_at DESC);
 

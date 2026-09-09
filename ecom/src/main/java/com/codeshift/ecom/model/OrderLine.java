@@ -16,7 +16,7 @@ public class OrderLine {
     private String productName;
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice;
-    @Column(precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal unitCost = BigDecimal.ZERO;
     @Column(nullable = false)
     private int quantity;

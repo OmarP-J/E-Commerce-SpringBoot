@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32, columnDefinition = "varchar(32)")
+    @Column(nullable = false, length = 32)
     private Role role = Role.CUSTOMER;
     @ManyToOne(fetch = FetchType.LAZY)
     private Coupon cartCoupon;

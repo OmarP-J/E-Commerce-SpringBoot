@@ -86,6 +86,27 @@ class ShopIntegrationTest {
     }
 
     @Test
+    void healthCheckIsPublicAndIncludesTheDatabase() throws Exception {
+        call("GET", "/actuator/health", null, null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void corsAllowsOnlyTheConfiguredFrontend() throws Exception {
+        mvc.perform(options("/api/catalog/categories")
+                .header("Origin", "http://localhost:4200")
+                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));
+
+        mvc.perform(options("/api/catalog/categories")
+                .header("Origin", "https://not-allowed.example")
+                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void openApiDocumentationIsAvailable() throws Exception {
         call("GET", "/v3/api-docs", null, null)
                 .andExpect(status().isOk())

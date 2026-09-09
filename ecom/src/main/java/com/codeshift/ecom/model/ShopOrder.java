@@ -43,6 +43,7 @@ public class ShopOrder {
     private BigDecimal discount;
     @Column(precision = 16, scale = 2, nullable = false)
     private BigDecimal total;
+    @Column(length = 30)
     private String couponCode;
     @ElementCollection
     @CollectionTable(name = "order_lines", joinColumns = @JoinColumn(name = "order_id"))
