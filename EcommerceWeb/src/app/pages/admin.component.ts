@@ -200,7 +200,6 @@ interface CouponDraft {
           </select>
         </label>
         <button [disabled]="busy">Actualizar ahora</button>
-        <small class="live-search-hint">Los resultados cambian mientras escribes.</small>
       </form>
 
       <div class="split">
