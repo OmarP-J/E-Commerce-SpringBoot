@@ -1,0 +1,9 @@
+{
+    "framework": "angular",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist/ecommerce-web/browser",
+    "rewrites": [
+          { "source": "/api/(.*)", "destination": "https://e-commerce-springboot-umj0.onrender.com/api/$1" },
+          { "source": "/(.*)", "destination": "/index.html" }
+    ]
+}
