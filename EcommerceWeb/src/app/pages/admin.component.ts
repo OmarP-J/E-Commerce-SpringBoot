@@ -390,6 +390,72 @@ interface CouponDraft {
               }
             </tbody>
           </table>
+
+          <div class="admin-cards">
+            @for (product of products; track product.id) {
+              <article class="admin-card">
+                <div class="admin-card-head">
+                  <div class="admin-card-title">
+                    <strong>{{ product.name }}</strong>
+                    <small>{{ product.categoryName }}</small>
+                  </div>
+                  <span class="status">{{
+                    product.active ? "Activo" : "Inactivo"
+                  }}</span>
+                </div>
+                <div class="admin-card-metrics">
+                  <div>
+                    <span class="admin-card-label">Precio</span>
+                    <strong>{{
+                      product.price | currency: "DOP" : "symbol-narrow"
+                    }}</strong>
+                    <small
+                      >Costo:
+                      {{
+                        product.cost ?? 0 | currency: "DOP" : "symbol-narrow"
+                      }}</small
+                    >
+                  </div>
+                  <div>
+                    <span class="admin-card-label">Stock</span>
+                    <span [class.field-error]="product.stock < 5">{{
+                      product.stock
+                    }}</span>
+                  </div>
+                </div>
+                <div class="actions compact-actions">
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="busy"
+                    (click)="editProduct(product)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="busy"
+                    (click)="changeProductAvailability(product)"
+                  >
+                    {{ product.active ? "Desactivar" : "Activar" }}
+                  </button>
+                  <label class="button secondary file-button">
+                    Imagen<input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      [disabled]="busy"
+                      (change)="uploadImage(product, $event)"
+                    />
+                  </label>
+                </div>
+              </article>
+            } @empty {
+              <p class="muted admin-cards-empty">
+                No hay productos para estos filtros.
+              </p>
+            }
+          </div>
         </div>
       </div>
 
@@ -547,6 +613,42 @@ interface CouponDraft {
               }
             </tbody>
           </table>
+
+          <div class="admin-cards">
+            @for (category of pagedCategories; track category.id) {
+              <article class="admin-card">
+                <div class="admin-card-head">
+                  <div class="admin-card-title">
+                    <strong>{{ category.name }}</strong>
+                  </div>
+                </div>
+                <p class="admin-card-desc">
+                  {{ category.description || "Sin descripción" }}
+                </p>
+                <div class="actions compact-actions">
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="busy"
+                    (click)="editCategory(category)"
+                  >
+                    Editar</button
+                  ><button
+                    type="button"
+                    class="text-button"
+                    [disabled]="busy"
+                    (click)="deleteCategory(category)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <p class="muted admin-cards-empty">
+                {{ categorySearch.trim() ? "No hay categorías para esta búsqueda." : "Aún no hay categorías." }}
+              </p>
+            }
+          </div>
           @if (categoryTotalPages > 1) {
             <nav class="pagination compact-pagination" aria-label="Páginas de categorías">
               <button
@@ -714,6 +816,52 @@ interface CouponDraft {
               }
             </tbody>
           </table>
+
+          <div class="admin-cards">
+            @for (coupon of pagedCoupons; track coupon.id) {
+              <article class="admin-card">
+                <div class="admin-card-head">
+                  <div class="admin-card-title">
+                    <strong>{{ coupon.code }}</strong>
+                  </div>
+                  <span class="status">{{
+                    coupon.active ? "Activo" : "Inactivo"
+                  }}</span>
+                </div>
+                <div class="admin-card-metrics">
+                  <div>
+                    <span class="admin-card-label">Descuento</span>
+                    <strong>{{ coupon.discountPercent }}%</strong>
+                  </div>
+                  <div>
+                    <span class="admin-card-label">Vence</span>
+                    <span>{{ coupon.expiresOn }}</span>
+                  </div>
+                </div>
+                <div class="actions compact-actions">
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="busy"
+                    (click)="editCoupon(coupon)"
+                  >
+                    Editar</button
+                  ><button
+                    type="button"
+                    class="secondary"
+                    [disabled]="busy"
+                    (click)="changeCouponAvailability(coupon)"
+                  >
+                    {{ coupon.active ? "Desactivar" : "Activar" }}
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <p class="muted admin-cards-empty">
+                {{ couponSearch.trim() ? "No hay cupones para esta búsqueda." : "Aún no hay cupones." }}
+              </p>
+            }
+          </div>
           @if (couponTotalPages > 1) {
             <nav class="pagination compact-pagination" aria-label="Páginas de cupones">
               <button
@@ -828,6 +976,48 @@ interface CouponDraft {
             }
           </tbody>
         </table>
+
+        <div class="admin-cards">
+          @for (user of pagedUsers; track user.id) {
+            <article class="admin-card">
+              <div class="admin-card-head">
+                <div class="admin-card-title">
+                  <strong>{{ user.name }}</strong>
+                  @if (user.id === session.user()?.id) {
+                    <small>Tu sesión</small>
+                  }
+                </div>
+                <span class="status">{{ roleLabels[user.role] }}</span>
+              </div>
+              <div class="admin-card-metrics admin-card-metrics-1">
+                <div>
+                  <span class="admin-card-label">Correo</span>
+                  <span class="admin-card-email">{{ user.email }}</span>
+                </div>
+              </div>
+              <label class="admin-card-role-select"
+                >Asignar rol
+                <select
+                  #role
+                  [value]="user.role"
+                  [disabled]="busy || user.id === session.user()?.id"
+                  (change)="changeRole(user, role.value)"
+                >
+                  <option value="CUSTOMER">Cliente</option>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="INVENTORY_MANAGER">
+                    Gestor de inventario
+                  </option>
+                  <option value="CUSTOMER_SUPPORT">Soporte al cliente</option>
+                </select>
+              </label>
+            </article>
+          } @empty {
+            <p class="muted admin-cards-empty">
+              {{ userSearch.trim() || userRoleFilter ? "No hay usuarios para este filtro." : "Aún no hay usuarios." }}
+            </p>
+          }
+        </div>
         @if (userTotalPages > 1) {
           <nav class="pagination compact-pagination" aria-label="Páginas de usuarios">
             <button
