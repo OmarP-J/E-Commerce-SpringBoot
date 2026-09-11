@@ -1,0 +1,21 @@
+# Caddy pide y renueva el certificado TLS solo (Let's Encrypt).
+# SITE_ADDRESS viene del archivo .env, por ejemplo:
+#   SITE_ADDRESS=api.midominio.com
+#   SITE_ADDRESS=140-238-170-12.sslip.io
+{$SITE_ADDRESS} {
+	encode gzip
+
+	# El backend de Spring Boot corre en la red interna de Docker.
+	reverse_proxy api:8080 {
+		# Sube el timeout: el primer arranque de Spring Boot puede tardar.
+		transport http {
+			dial_timeout 10s
+			response_header_timeout 120s
+		}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

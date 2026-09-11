@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: ../../ecom
+      dockerfile: Dockerfile
+    image: esencial-api:latest
+    container_name: esencial-api
+    restart: always
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+    expose:
+      - "8080"
+    healthcheck:
+      # bash/dev/tcp en vez de curl: la imagen JRE no siempre trae curl instalado.
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 180s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: esencial-caddy
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:
