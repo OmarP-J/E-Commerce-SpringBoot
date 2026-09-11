@@ -10,6 +10,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("""
       select p from Product p
+      join fetch p.category
       where (:admin = true or p.active = true)
         and (
           cast(function('translate', lower(p.name), 'áàäâãåéèëêíìïîóòöôõúùüûñç', 'aaaaaaeeeeiiiiooooouuuunc') as string) like concat('%', :search, '%')
