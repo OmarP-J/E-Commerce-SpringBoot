@@ -1602,13 +1602,23 @@ th {
   letter-spacing: 0.08em;
 }
 .admin-table {
-  min-width: 700px;
+  min-width: 820px;
 }
 .admin-table td small {
   margin-top: 0.25rem;
 }
-.compact-actions {
+.admin-table th:first-child,
+.admin-table td:first-child {
+  min-width: 200px;
+}
+.admin-table th:last-child,
+.admin-table td:last-child {
+  min-width: 300px;
+}
+.actions.compact-actions {
   margin-top: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: flex-start;
 }
 .compact-actions button,
