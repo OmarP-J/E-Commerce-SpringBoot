@@ -1645,6 +1645,110 @@ th {
   font-weight: 800;
   color: var(--green);
 }
+
+/* Admin tables: card layout below 768px, real table from 768px up.
+   The <table> and .admin-cards are siblings inside the same .table-wrap;
+   only one of the two is ever visible at a given width. */
+.admin-section .admin-cards {
+  display: none;
+}
+.admin-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-soft);
+}
+.admin-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.admin-card-title {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.admin-card-title strong {
+  font-size: 0.95rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.admin-card-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.admin-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+}
+.admin-card-metrics-1 {
+  grid-template-columns: 1fr;
+}
+.admin-card-metrics > div {
+  min-width: 0;
+}
+.admin-card-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.admin-card-email {
+  display: block;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.admin-card-role-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.admin-card-role-select select {
+  width: 100%;
+}
+.admin-card .actions.compact-actions button,
+.admin-card .actions.compact-actions .file-button {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+}
+.admin-cards-empty {
+  margin: 0;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .admin-section .table-wrap > table.admin-table {
+    display: none;
+  }
+  .admin-section .table-wrap {
+    background: var(--paper);
+  }
+  .admin-section .admin-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(280px, 0.65fr) minmax(0, 1.35fr);
@@ -2198,9 +2302,6 @@ th {
     top: 78px;
     width: 100%;
     border-radius: 16px;
-  }
-  .admin-table {
-    min-width: 660px;
   }
   .pagination {
     flex-wrap: wrap;
