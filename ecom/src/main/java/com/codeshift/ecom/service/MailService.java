@@ -59,6 +59,10 @@ public class MailService {
                     .retrieve()
                     .toBodilessEntity();
             log.info("Correo enviado a {}", maskEmail(toEmail));
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            log.error("Error devuelto por Brevo (status {}): {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new ApiException(HttpStatus.BAD_GATEWAY,
+                    "No pudimos enviar el correo de verificación (Brevo: " + e.getResponseBodyAsString() + ").");
         } catch (RestClientException e) {
             log.error("No se pudo enviar el correo a {}", maskEmail(toEmail), e);
             throw new ApiException(HttpStatus.BAD_GATEWAY,
