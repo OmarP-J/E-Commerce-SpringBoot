@@ -1349,9 +1349,19 @@ textarea {
   min-height: 36px;
   padding: 0.25rem 0.6rem;
 }
+.cart-split {
+  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
+}
 .summary {
   position: sticky;
   top: 105px;
+}
+.summary h2 {
+  font-size: 1.5rem;
+}
+.summary .payment-option {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
 }
 .totals {
   margin: 0;
@@ -2294,7 +2304,6 @@ th {
   }
   .detail-actions,
   .form-row,
-  .coupon-row,
   .order-actions {
     align-items: stretch;
     flex-direction: column;
@@ -2308,6 +2317,7 @@ th {
   }
   .line-item {
     grid-template-columns: 68px 1fr;
+    align-items: start;
   }
   .line-item img,
   .line-thumb {
@@ -2315,8 +2325,13 @@ th {
     height: 68px;
   }
   .line-item > :last-child {
-    grid-column: 2;
-    justify-items: start;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
   }
   .order-head {
     align-items: flex-start;

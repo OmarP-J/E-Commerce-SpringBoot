@@ -46,7 +46,7 @@ interface PaypalSdk {
           <a class="button" routerLink="/catalog">Ver productos</a>
         </section>
       } @else {
-        <div class="split">
+        <div class="split cart-split">
           <section class="stack" aria-label="Productos del carrito">
             @for (line of currentCart.items; track line.product.id) {
               <article class="panel line-item">
