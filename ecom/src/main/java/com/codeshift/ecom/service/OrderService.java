@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -21,10 +22,28 @@ public class OrderService {
     private final SupportCaseRepository supportCases;
     private final SettingsService settings;
     private final InventoryMovementRepository movements;
+    private final PaymentService payments;
 
     public Views.OrderView checkout(String email, Requests.Checkout input) {
+        PaymentProvider provider = input.providerOrDefault();
+        if (!payments.isAvailable(provider))
+            throw ApiException.badRequest("Esa forma de pago no está disponible.");
+        if (provider == PaymentProvider.SIMULATED && !input.acceptSimulatedPayment())
+            throw ApiException.badRequest("Debes aceptar que el pago es simulado.");
+        if (provider != PaymentProvider.SIMULATED
+                && (input.paymentReference() == null || input.paymentReference().isBlank()))
+            throw ApiException.badRequest("Falta la referencia del pago.");
+
         User user = carts.lockCustomer(email);
-        var previous = orders.findByUserIdAndRequestKey(user.getId(), input.requestId().toString());
+        // Con pasarela, la clave de idempotencia sale de la referencia del pago:
+        // si el navegador vuelve dos veces a la URL de retorno, se devuelve el
+        // pedido que ya existe en vez de crear uno nuevo y cobrar de nuevo.
+        String requestKey = provider == PaymentProvider.SIMULATED
+                ? input.requestId().toString()
+                : UUID.nameUUIDFromBytes(
+                        (provider.name() + ':' + input.paymentReference()).getBytes(StandardCharsets.UTF_8))
+                        .toString();
+        var previous = orders.findByUserIdAndRequestKey(user.getId(), requestKey);
         if (previous.isPresent())
             return Views.OrderView.of(previous.get());
 
@@ -36,7 +55,7 @@ public class OrderService {
         order.setCustomerName(user.getName());
         order.setAddress(input.address().trim());
         order.setPhone(input.phone().trim());
-        order.setRequestKey(input.requestId().toString());
+        order.setRequestKey(requestKey);
         BigDecimal subtotal = new BigDecimal("0.00");
         List<StockChange> stockChanges = new ArrayList<>();
 
@@ -68,6 +87,14 @@ public class OrderService {
         order.setSubtotal(subtotal);
         order.setDiscount(discount);
         order.setTotal(subtotal.subtract(discount));
+
+        // El cobro se confirma con la pasarela DESPUÉS de reservar las
+        // existencias: si algo falla aquí, la transacción entera se deshace y
+        // el stock vuelve a su sitio.
+        if (provider != PaymentProvider.SIMULATED)
+            payments.settle(provider, input.paymentReference(), order.getTotal());
+        order.setPaymentStatus(payments.paymentStatusLabel(provider));
+
         orders.saveAndFlush(order);
         for (StockChange change : stockChanges)
             recordMovement(change.product(), user, InventoryMovement.Type.EXIT,

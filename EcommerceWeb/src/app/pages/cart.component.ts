@@ -1,9 +1,25 @@
 import { CurrencyPipe } from "@angular/common";
-import { Component, OnInit, inject } from "@angular/core";
+import { Component, NgZone, OnInit, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
-import { Address, Cart, CartLine, Order } from "../core/models";
+import {
+  Address,
+  Cart,
+  CartLine,
+  Order,
+  PaymentMethods,
+  PaymentProvider,
+} from "../core/models";
 import { Page } from "../core/page";
+
+/** Trozo mínimo del SDK de PayPal que usamos. */
+interface PaypalSdk {
+  Buttons(options: {
+    createOrder: () => Promise<string>;
+    onApprove: (data: { orderID: string }) => Promise<void>;
+    onError: (error: unknown) => void;
+  }): { render(container: HTMLElement): void };
+}
 
 @Component({
   imports: [CurrencyPipe, FormsModule, RouterLink],
@@ -217,25 +233,89 @@ import { Page } from "../core/page";
                   placeholder="809-555-0100"
                 />
               </label>
-              <label class="check-row">
-                <input
-                  type="checkbox"
-                  name="simulatedPayment"
-                  [(ngModel)]="acceptSimulatedPayment"
-                  required
-                />
-                <span
-                  >Entiendo que este es un pago simulado y no se realizará
-                  ningún cobro.</span
+              <h3>Forma de pago</h3>
+              @if (methods?.testMode) {
+                <p class="payment-note">
+                  Todas las formas de pago están en modo de prueba: no se
+                  realiza ningún cobro real.
+                </p>
+              }
+
+              <div class="payment-options">
+                @if (methods?.simulated) {
+                  <label class="payment-option">
+                    <input
+                      type="radio"
+                      name="paymentProvider"
+                      value="SIMULATED"
+                      [(ngModel)]="selectedProvider"
+                      (ngModelChange)="providerChanged()"
+                    />
+                    <span>Pago simulado</span>
+                  </label>
+                }
+                @if (methods?.paypal?.enabled) {
+                  <label class="payment-option">
+                    <input
+                      type="radio"
+                      name="paymentProvider"
+                      value="PAYPAL"
+                      [(ngModel)]="selectedProvider"
+                      (ngModelChange)="providerChanged()"
+                    />
+                    <span>PayPal</span>
+                  </label>
+                }
+                @if (methods?.stripe?.enabled) {
+                  <label class="payment-option">
+                    <input
+                      type="radio"
+                      name="paymentProvider"
+                      value="STRIPE"
+                      [(ngModel)]="selectedProvider"
+                      (ngModelChange)="providerChanged()"
+                    />
+                    <span>Tarjeta (Stripe)</span>
+                  </label>
+                }
+              </div>
+
+              @if (selectedProvider === "SIMULATED") {
+                <label class="check-row">
+                  <input
+                    type="checkbox"
+                    name="simulatedPayment"
+                    [(ngModel)]="acceptSimulatedPayment"
+                    required
+                  />
+                  <span
+                    >Entiendo que este es un pago simulado y no se realizará
+                    ningún cobro.</span
+                  >
+                </label>
+                <button
+                  [disabled]="
+                    checkoutForm.invalid || busy || !!currentCart.couponWarning
+                  "
                 >
-              </label>
-              <button
-                [disabled]="
-                  checkoutForm.invalid || busy || !!currentCart.couponWarning
-                "
-              >
-                {{ busy ? "Procesando…" : "Confirmar compra simulada" }}
-              </button>
+                  {{ busy ? "Procesando…" : "Confirmar compra simulada" }}
+                </button>
+              } @else if (selectedProvider === "PAYPAL") {
+                @if (!deliveryReady) {
+                  <p class="payment-note">
+                    Completa la dirección y el teléfono para habilitar el pago.
+                  </p>
+                }
+                <div id="paypal-buttons" class="paypal-buttons"></div>
+              } @else if (selectedProvider === "STRIPE") {
+                <button
+                  type="button"
+                  [disabled]="!deliveryReady || busy || !!currentCart.couponWarning"
+                  (click)="payWithStripe()"
+                >
+                  {{ busy ? "Redirigiendo…" : "Pagar con tarjeta" }}
+                </button>
+              }
             </form>
           </aside>
         </div>
@@ -245,6 +325,7 @@ import { Page } from "../core/page";
 })
 export class CartComponent extends Page implements OnInit {
   private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
 
   cart: Cart | null = null;
   couponCode = "";
@@ -253,7 +334,10 @@ export class CartComponent extends Page implements OnInit {
   acceptSimulatedPayment = false;
   addresses: Address[] = [];
   selectedAddressId: number | null = null;
+  methods: PaymentMethods | null = null;
+  selectedProvider: PaymentProvider = "SIMULATED";
   private checkoutRequestId = crypto.randomUUID();
+  private static readonly DELIVERY_KEY = "esencial-checkout-delivery";
 
   get itemCount(): number {
     return (
@@ -263,6 +347,166 @@ export class CartComponent extends Page implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadPaymentMethods();
+    this.handleStripeReturn();
+  }
+
+  /** Dirección y teléfono son obligatorios para cualquier forma de pago. */
+  get deliveryReady(): boolean {
+    return this.address.trim().length > 0 && this.phone.trim().length >= 7;
+  }
+
+  private loadPaymentMethods(): void {
+    void this.execute(async () => {
+      this.methods = await this.api.get<PaymentMethods>(
+        "/customer/payments/methods",
+      );
+      if (!this.methods.simulated) {
+        if (this.methods.paypal.enabled) this.selectedProvider = "PAYPAL";
+        else if (this.methods.stripe.enabled) this.selectedProvider = "STRIPE";
+      }
+    });
+  }
+
+  providerChanged(): void {
+    if (this.selectedProvider === "PAYPAL") void this.renderPaypalButtons();
+  }
+
+  // ---------------------------------------------------------------- PayPal
+
+  private async renderPaypalButtons(): Promise<void> {
+    const config = this.methods?.paypal;
+    if (!config?.enabled) return;
+    try {
+      await this.loadPaypalSdk(config.publicKey);
+    } catch {
+      this.session.notify("No se pudo cargar PayPal.", true);
+      return;
+    }
+    // El @if de la plantilla acaba de crear el contenedor: esperamos al
+    // siguiente ciclo para que exista en el DOM.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const container = document.getElementById("paypal-buttons");
+    const paypal = (window as unknown as { paypal?: PaypalSdk }).paypal;
+    if (!container || !paypal) return;
+    container.innerHTML = "";
+    paypal
+      .Buttons({
+        createOrder: async () => {
+          if (!this.deliveryReady)
+            throw new Error("Faltan los datos de entrega.");
+          const order = await this.api.post<{ id: string }>(
+            "/customer/payments/paypal/orders",
+            {},
+          );
+          return order.id;
+        },
+        onApprove: (data: { orderID: string }) =>
+          this.zone.run(() => this.finishOrder("PAYPAL", data.orderID)),
+        onError: () => {
+          this.zone.run(() =>
+            this.session.notify(
+              "No se pudo completar el pago con PayPal.",
+              true,
+            ),
+          );
+        },
+      })
+      .render(container);
+  }
+
+  private loadPaypalSdk(clientId: string): Promise<void> {
+    if ((window as unknown as { paypal?: unknown }).paypal)
+      return Promise.resolve();
+    const currency = this.methods?.currency ?? "USD";
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src =
+        "https://www.paypal.com/sdk/js?client-id=" +
+        encodeURIComponent(clientId) +
+        "&currency=" +
+        encodeURIComponent(currency);
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("PayPal no cargó."));
+      document.head.appendChild(script);
+    });
+  }
+
+  // ---------------------------------------------------------------- Stripe
+
+  payWithStripe(): void {
+    if (!this.deliveryReady) {
+      this.session.notify("Completa la dirección y el teléfono.", true);
+      return;
+    }
+    void this.execute(async () => {
+      // El navegador se va a Stripe y vuelve con el componente recreado:
+      // guardamos los datos de entrega para no perderlos.
+      sessionStorage.setItem(
+        CartComponent.DELIVERY_KEY,
+        JSON.stringify({ address: this.address, phone: this.phone }),
+      );
+      const session = await this.api.post<{ id: string; url: string }>(
+        "/customer/payments/stripe/sessions",
+        {},
+      );
+      window.location.href = session.url;
+    });
+  }
+
+  private handleStripeReturn(): void {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("stripe_session");
+    const cancelled = params.get("stripe_cancel");
+    if (!sessionId && !cancelled) return;
+    history.replaceState({}, "", "/cart");
+    if (cancelled) {
+      this.session.notify("Pago cancelado. Tu carrito sigue intacto.");
+      return;
+    }
+    const saved = sessionStorage.getItem(CartComponent.DELIVERY_KEY);
+    if (saved) {
+      try {
+        const delivery = JSON.parse(saved) as {
+          address?: string;
+          phone?: string;
+        };
+        this.address = delivery.address ?? this.address;
+        this.phone = delivery.phone ?? this.phone;
+      } catch {
+        /* datos ilegibles: se piden de nuevo abajo */
+      }
+    }
+    sessionStorage.removeItem(CartComponent.DELIVERY_KEY);
+    if (!this.deliveryReady) {
+      this.session.notify(
+        "Se perdieron los datos de entrega. Vuelve a intentar la compra.",
+        true,
+      );
+      return;
+    }
+    void this.execute(() => this.finishOrder("STRIPE", sessionId!));
+  }
+
+  // ------------------------------------------------------------- confirmar
+
+  private async finishOrder(
+    provider: PaymentProvider,
+    reference: string,
+  ): Promise<void> {
+    const order = await this.api.post<Order>("/customer/checkout", {
+      requestId: this.checkoutRequestId,
+      address: this.address.trim(),
+      phone: this.phone.trim(),
+      acceptSimulatedPayment: provider === "SIMULATED",
+      provider,
+      paymentReference: reference,
+    });
+    this.checkoutRequestId = crypto.randomUUID();
+    this.session.notify(
+      `Pedido #${order.id} confirmado. El pago fue de prueba, no se cobró nada.`,
+    );
+    await this.router.navigateByUrl("/orders");
   }
 
   load(): void {
@@ -320,21 +564,9 @@ export class CartComponent extends Page implements OnInit {
   }
 
   checkout(): void {
-    if (!this.cart?.items.length || !this.acceptSimulatedPayment) return;
-
-    void this.execute(async () => {
-      const order = await this.api.post<Order>("/customer/checkout", {
-        requestId: this.checkoutRequestId,
-        address: this.address.trim(),
-        phone: this.phone.trim(),
-        acceptSimulatedPayment: true,
-      });
-
-      this.checkoutRequestId = crypto.randomUUID();
-      this.session.notify(
-        `Pedido #${order.id} confirmado. El pago fue simulado.`,
-      );
-      await this.router.navigateByUrl("/orders");
-    });
+    if (!this.cart?.items.length) return;
+    if (this.selectedProvider !== "SIMULATED") return;
+    if (!this.acceptSimulatedPayment) return;
+    void this.execute(() => this.finishOrder("SIMULATED", ""));
   }
 }

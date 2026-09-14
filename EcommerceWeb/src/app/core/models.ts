@@ -161,3 +161,18 @@ export const statusLabels: Record<OrderStatus, string> = {
   DELIVERED: "Entregado",
   CANCELLED: "Cancelado",
 };
+
+export type PaymentProvider = "SIMULATED" | "PAYPAL" | "STRIPE";
+
+export interface PaymentGateway {
+  enabled: boolean;
+  publicKey: string;
+}
+
+export interface PaymentMethods {
+  testMode: boolean;
+  currency: string;
+  simulated: boolean;
+  paypal: PaymentGateway;
+  stripe: PaymentGateway;
+}

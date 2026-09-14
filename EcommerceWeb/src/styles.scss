@@ -1646,6 +1646,53 @@ th {
   color: var(--green);
 }
 
+/* Formas de pago en el carrito */
+.payment-note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.payment-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.payment-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.payment-option:has(input:checked) {
+  border-color: var(--green);
+  background: var(--soft-green);
+  color: var(--green-dark);
+}
+.payment-option input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  min-height: 0;
+  accent-color: var(--green);
+  margin: 0;
+}
+.payment-option span {
+  white-space: nowrap;
+}
+.paypal-buttons {
+  min-height: 52px;
+}
+
 /* Admin tables: card layout below 768px, real table from 768px up.
    The <table> and .admin-cards are siblings inside the same .table-wrap;
    only one of the two is ever visible at a given width. */

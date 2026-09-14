@@ -1,5 +1,6 @@
 package com.codeshift.ecom.api;
 
+import com.codeshift.ecom.model.PaymentProvider;
 import com.codeshift.ecom.model.ShopOrder;
 import com.codeshift.ecom.model.InventoryMovement;
 import com.codeshift.ecom.model.SupportCase;
@@ -52,9 +53,21 @@ public final class Requests {
     public record CouponCode(@NotBlank @Size(max = 30) String code) {
     }
 
+    /**
+     * {@code provider} vacío significa pago simulado, para no romper a los
+     * clientes que ya existían. {@code paymentReference} es el id de la orden
+     * de PayPal o de la sesión de Stripe; el servidor lo verifica contra la
+     * pasarela antes de crear el pedido.
+     */
     public record Checkout(@NotNull UUID requestId, @NotBlank @Size(max = 300) String address,
             @NotBlank @Pattern(regexp = "[+0-9() .-]{7,30}") String phone,
-            @AssertTrue(message = "Debes aceptar que el pago es simulado") boolean acceptSimulatedPayment) {
+            boolean acceptSimulatedPayment,
+            PaymentProvider provider,
+            @Size(max = 120) String paymentReference) {
+
+        public PaymentProvider providerOrDefault() {
+            return provider == null ? PaymentProvider.SIMULATED : provider;
+        }
     }
 
     public record OrderStatus(@NotNull ShopOrder.Status status) {
