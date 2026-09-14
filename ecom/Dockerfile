@@ -17,4 +17,4 @@ COPY --from=build /workspace/target/ecom-1.0.0.jar app.jar
 USER ecommerce
 EXPOSE 10000
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-Djdk.tls.client.protocols=TLSv1.2", "-jar", "/app/app.jar"]

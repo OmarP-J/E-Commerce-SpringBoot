@@ -321,7 +321,7 @@ No configures `PORT`: Render lo proporciona y Spring Boot lo lee automáticament
 | Variable | Ejemplo o propósito |
 | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `prod` |
-| `DB_URL` | `jdbc:sqlserver://mi-servidor.database.windows.net:1433;databaseName=ecommerce;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30` |
+| `DB_URL` | `jdbc:sqlserver://mi-servidor.database.windows.net:1433;databaseName=ecommerce;encrypt=true;trustServerCertificate=true;sslProtocol=TLSv1.2;loginTimeout=30` |
 | `DB_USERNAME` | Usuario de Azure SQL |
 | `DB_PASSWORD` | Contraseña de Azure SQL; marcar como secreta |
 | `CLIENT_ORIGIN` | URL pública exacta del frontend, por ejemplo `https://mi-tienda.onrender.com` |
