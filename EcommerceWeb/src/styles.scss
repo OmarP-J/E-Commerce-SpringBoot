@@ -1656,6 +1656,16 @@ th {
   color: var(--green);
 }
 
+/* Pantalla de verificación por código */
+.verify-code-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+  text-indent: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Formas de pago en el carrito */
 .payment-note {
   margin: 0;

@@ -53,6 +53,13 @@ public final class Requests {
     public record CouponCode(@NotBlank @Size(max = 30) String code) {
     }
 
+    public record VerifyCode(@NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Pattern(regexp = "\\d{6}", message = "El código son 6 dígitos") String code) {
+    }
+
+    public record ResendCode(@NotBlank @Email @Size(max = 254) String email) {
+    }
+
     /**
      * {@code provider} vacío significa pago simulado, para no romper a los
      * clientes que ya existían. {@code paymentReference} es el id de la orden

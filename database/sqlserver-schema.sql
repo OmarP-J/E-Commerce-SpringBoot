@@ -19,7 +19,18 @@ CREATE TABLE shop_users (
     name NVARCHAR(80) NOT NULL,
     password_hash NVARCHAR(255) NOT NULL,
     role NVARCHAR(32) NOT NULL CHECK (role IN ('CUSTOMER', 'ADMIN', 'INVENTORY_MANAGER', 'CUSTOMER_SUPPORT')),
+    email_verified BIT NOT NULL DEFAULT 1,
     cart_coupon_id BIGINT NULL REFERENCES coupons(id)
+);
+
+-- Códigos pendientes de verificación del correo. Una fila por usuario.
+CREATE TABLE email_verifications (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES shop_users(id) ON DELETE CASCADE,
+    code_hash VARCHAR(100) NOT NULL,
+    expires_at DATETIME2 NOT NULL,
+    sent_at DATETIME2 NOT NULL,
+    attempts INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE products (

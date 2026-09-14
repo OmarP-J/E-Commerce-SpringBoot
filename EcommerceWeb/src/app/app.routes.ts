@@ -55,6 +55,11 @@ export const routes: Routes = [
     data: { signup: true },
   },
   {
+    path: "verify",
+    loadComponent: () =>
+      import("./pages/verify.component").then((m) => m.VerifyComponent),
+  },
+  {
     path: "cart",
     canActivate: [customer],
     loadComponent: () =>

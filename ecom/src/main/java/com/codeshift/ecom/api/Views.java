@@ -19,6 +19,13 @@ public final class Views {
     public record Auth(String token, UserView user) {
     }
 
+    /**
+     * Respuesta del registro. Cuando hace falta verificar el correo, session
+     * viene vacío: primero hay que escribir el código que llega por correo.
+     */
+    public record SignupResult(boolean verificationRequired, String email, Auth session) {
+    }
+
     public record CategoryView(Long id, String name, String description) {
         public static CategoryView of(Category c) {
             return new CategoryView(c.getId(), c.getName(), c.getDescription());

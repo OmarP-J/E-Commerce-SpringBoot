@@ -1,8 +1,9 @@
+import { HttpErrorResponse } from "@angular/common/http";
 import { Component, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Page } from "../core/page";
-import { Auth, homeForRole } from "../core/models";
+import { Auth, SignupResult, homeForRole } from "../core/models";
 
 @Component({
   imports: [FormsModule, RouterLink],
@@ -133,19 +134,49 @@ export class AuthComponent extends Page {
   showPassword = false;
   submit(): void {
     void this.execute(async () => {
-      const auth = await this.api.post<Auth>(
-        this.signup ? "/auth/signup" : "/auth/login",
-        { name: this.name, email: this.email, password: this.password },
-      );
-      this.session.signIn(auth);
-      const requested = this.route.snapshot.queryParamMap.get("returnUrl");
-      const safeReturn =
-        requested?.startsWith("/") && !requested.startsWith("//")
-          ? requested
-          : null;
-      await this.router.navigateByUrl(
-        safeReturn ?? homeForRole(auth.user.role),
-      );
+      const credentials = {
+        name: this.name,
+        email: this.email,
+        password: this.password,
+      };
+      if (this.signup) {
+        const result = await this.api.post<SignupResult>(
+          "/auth/signup",
+          credentials,
+        );
+        if (result.verificationRequired) {
+          this.session.notify("Te enviamos un código a tu correo.");
+          await this.goToVerification(result.email);
+          return;
+        }
+        if (result.session) await this.enter(result.session);
+        return;
+      }
+      try {
+        await this.enter(await this.api.post<Auth>("/auth/login", credentials));
+      } catch (error) {
+        // 403 en el login significa cuenta sin verificar: en vez de dejarlo
+        // atascado, lo mandamos a escribir el código.
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          await this.goToVerification(this.email.trim());
+          return;
+        }
+        throw error;
+      }
     });
+  }
+
+  private async enter(auth: Auth): Promise<void> {
+    this.session.signIn(auth);
+    const requested = this.route.snapshot.queryParamMap.get("returnUrl");
+    const safeReturn =
+      requested?.startsWith("/") && !requested.startsWith("//")
+        ? requested
+        : null;
+    await this.router.navigateByUrl(safeReturn ?? homeForRole(auth.user.role));
+  }
+
+  private goToVerification(email: string): Promise<boolean> {
+    return this.router.navigate(["/verify"], { queryParams: { email } });
   }
 }

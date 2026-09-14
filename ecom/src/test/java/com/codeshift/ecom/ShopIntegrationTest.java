@@ -21,7 +21,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = { "spring.datasource.url=jdbc:h2:mem:shoptest;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000",
-        "spring.jpa.hibernate.ddl-auto=create-drop" })
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        // Los correos de prueba usan dominios .local, que no tienen MX.
+        "app.mail.verification.check-mx=false" })
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ShopIntegrationTest {
@@ -335,9 +337,13 @@ class ShopIntegrationTest {
     }
 
     private String signup(String email) throws Exception {
-        return token(call("POST", "/api/auth/signup", null,
+        // Sin correo configurado el registro devuelve la sesión directamente,
+        // dentro de "session"; con verificación activa vendría vacío.
+        var response = call("POST", "/api/auth/signup", null,
                 Map.of("name", "Cliente", "email", email, "password", "LongPassword123!"))
-                .andExpect(status().isCreated()));
+                .andExpect(status().isCreated());
+        return json.readTree(response.andReturn().getResponse().getContentAsString())
+                .get("session").get("token").asText();
     }
 
     private String panelUser(User.Role role) throws Exception {

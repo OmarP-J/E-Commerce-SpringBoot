@@ -20,18 +20,59 @@ public class AccountService {
     private final UserRepository users;
     private final PasswordEncoder passwords;
     private final TokenService tokens;
+    private final EmailAddressValidator emailAddresses;
+    private final EmailVerificationService verification;
 
-    public Views.Auth signup(Requests.Signup input) {
+    public Views.SignupResult signup(Requests.Signup input) {
         validatePasswordBytes(input.password());
         String email = normalizeEmail(input.email());
+        emailAddresses.validate(email);
         if (users.findByEmail(email).isPresent())
             throw ApiException.conflict("El correo ya está registrado.");
         User user = new User();
         user.setName(input.name().trim());
         user.setEmail(email);
         user.setPasswordHash(passwords.encode(input.password()));
+
+        boolean needsCode = verification.isRequired();
+        user.setEmailVerified(!needsCode);
         users.saveAndFlush(user);
-        return new Views.Auth(tokens.create(email), Views.UserView.of(user));
+
+        if (needsCode) {
+            // Si el envío falla, la transacción se deshace y la cuenta no se
+            // crea: mejor eso que dejar a alguien con una cuenta inaccesible.
+            verification.startVerification(user);
+            return new Views.SignupResult(true, email, null);
+        }
+        return new Views.SignupResult(false, email,
+                new Views.Auth(tokens.create(email), Views.UserView.of(user)));
+    }
+
+    /**
+     * Confirma el código y deja la sesión iniciada.
+     *
+     * noRollbackFor es deliberado: cuando el código no coincide, queremos que
+     * el contador de intentos quede guardado antes de devolver el error. Sin
+     * esto, el rollback lo borraría y se podrían probar códigos sin límite.
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public Views.Auth verifyCode(Requests.VerifyCode input) {
+        User user = requireUser(input.email());
+        if (!user.isEmailVerified())
+            verification.confirm(user, input.code());
+        return new Views.Auth(tokens.create(user.getEmail()), Views.UserView.of(user));
+    }
+
+    public void resendCode(Requests.ResendCode input) {
+        User user = requireUser(input.email());
+        if (user.isEmailVerified())
+            throw ApiException.conflict("Esta cuenta ya está verificada. Inicia sesión.");
+        verification.resend(user);
+    }
+
+    private User requireUser(String email) {
+        return users.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> ApiException.notFound("No hay ninguna cuenta con ese correo."));
     }
 
     public Views.Auth login(Requests.Login input) {
@@ -39,6 +80,9 @@ public class AccountService {
         User user = users.findByEmail(normalizeEmail(input.email())).orElse(null);
         if (user == null || !passwords.matches(input.password(), user.getPasswordHash()))
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Correo o contraseña incorrectos.");
+        if (!user.isEmailVerified() && verification.isRequired())
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Tu correo todavía no está verificado. Escribe el código que te enviamos.");
         return new Views.Auth(tokens.create(user.getEmail()), Views.UserView.of(user));
     }
 

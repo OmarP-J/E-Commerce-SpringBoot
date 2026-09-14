@@ -27,6 +27,13 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private Role role = Role.CUSTOMER;
+    /**
+     * Por defecto true: las cuentas que ya existían quedan verificadas y el
+     * administrador inicial no se queda fuera. El registro lo pone en false a
+     * propósito cuando la verificación por correo está activa.
+     */
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = true;
     @ManyToOne(fetch = FetchType.LAZY)
     private Coupon cartCoupon;
     @ManyToMany

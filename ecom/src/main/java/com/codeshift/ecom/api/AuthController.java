@@ -13,8 +13,19 @@ public class AuthController {
 
     @PostMapping("/api/auth/signup")
     @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
-    public Views.Auth signup(@Valid @RequestBody Requests.Signup input) {
+    public Views.SignupResult signup(@Valid @RequestBody Requests.Signup input) {
         return accounts.signup(input);
+    }
+
+    @PostMapping("/api/auth/verify")
+    public Views.Auth verify(@Valid @RequestBody Requests.VerifyCode input) {
+        return accounts.verifyCode(input);
+    }
+
+    @PostMapping("/api/auth/verify/resend")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void resend(@Valid @RequestBody Requests.ResendCode input) {
+        accounts.resendCode(input);
     }
 
     @PostMapping("/api/auth/login")

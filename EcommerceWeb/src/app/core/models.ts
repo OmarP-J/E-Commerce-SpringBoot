@@ -176,3 +176,9 @@ export interface PaymentMethods {
   paypal: PaymentGateway;
   stripe: PaymentGateway;
 }
+
+export interface SignupResult {
+  verificationRequired: boolean;
+  email: string;
+  session: Auth | null;
+}
