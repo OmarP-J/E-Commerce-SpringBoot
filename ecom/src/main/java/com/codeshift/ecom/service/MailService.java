@@ -95,10 +95,19 @@ public class MailService {
     private static String describe(org.springframework.web.client.RestClientResponseException e) {
         String body = e.getResponseBodyAsString();
         if (body == null || body.isBlank())
-            body = "sin detalle";
+            body = hint(e.getStatusCode().value());
         else if (body.length() > 200)
             body = body.substring(0, 200);
         return e.getStatusCode().value() + ": " + body;
+    }
+
+    /** Brevo devuelve 401 y 403 con el cuerpo vacío; sin pista no hay por dónde empezar. */
+    private static String hint(int status) {
+        return switch (status) {
+            case 401 -> "clave de API rechazada; revisa BREVO_API_KEY y que la cuenta de Brevo esté activada";
+            case 403 -> "remitente no autorizado; verifica MAIL_FROM_EMAIL en Brevo";
+            default -> "sin detalle";
+        };
     }
 
     /** Para el log local: deja el cuerpo legible sin etiquetas. */

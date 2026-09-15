@@ -31,6 +31,23 @@ public class MailProperties {
 
     private final Verification verification = new Verification();
 
+    /**
+     * Los valores llegan de variables de entorno, donde es facilísimo dejar un
+     * espacio o un salto de línea al pegar. Brevo responde 401 sin explicación
+     * ante una clave con basura alrededor, así que se limpian al leerlos.
+     */
+    public void setBrevoApiKey(String brevoApiKey) {
+        this.brevoApiKey = brevoApiKey == null ? "" : brevoApiKey.strip();
+    }
+
+    public void setFromEmail(String fromEmail) {
+        this.fromEmail = fromEmail == null ? "" : fromEmail.strip();
+    }
+
+    public void setBrevoApiBase(String brevoApiBase) {
+        this.brevoApiBase = brevoApiBase == null ? "" : brevoApiBase.strip();
+    }
+
     public boolean isConfigured() {
         return enabled && !brevoApiKey.isBlank() && !fromEmail.isBlank();
     }
