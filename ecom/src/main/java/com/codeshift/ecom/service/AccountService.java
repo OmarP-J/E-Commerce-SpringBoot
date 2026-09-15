@@ -57,22 +57,25 @@ public class AccountService {
      */
     @Transactional(noRollbackFor = ApiException.class)
     public Views.Auth verifyCode(Requests.VerifyCode input) {
-        User user = requireUser(input.email());
-        if (!user.isEmailVerified())
-            verification.confirm(user, input.code());
+        User user = users.findByEmail(normalizeEmail(input.email())).orElse(null);
+        // Una cuenta ya verificada NO puede canjear un token por aquí: este
+        // endpoint es público, así que emitir sesión sin comprobar el código
+        // sería entregar cualquier cuenta a quien sepa el correo. El mismo
+        // mensaje para "no existe" y "ya verificada" evita además que sirva
+        // para averiguar qué correos están registrados.
+        if (user == null || user.isEmailVerified())
+            throw ApiException.badRequest(
+                    "Ese código no es válido. Si ya verificaste tu cuenta, inicia sesión.");
+        verification.confirm(user, input.code());
         return new Views.Auth(tokens.create(user.getEmail()), Views.UserView.of(user));
     }
 
     public void resendCode(Requests.ResendCode input) {
-        User user = requireUser(input.email());
-        if (user.isEmailVerified())
-            throw ApiException.conflict("Esta cuenta ya está verificada. Inicia sesión.");
+        User user = users.findByEmail(normalizeEmail(input.email())).orElse(null);
+        // Responde igual exista o no la cuenta, por el mismo motivo.
+        if (user == null || user.isEmailVerified())
+            return;
         verification.resend(user);
-    }
-
-    private User requireUser(String email) {
-        return users.findByEmail(normalizeEmail(email))
-                .orElseThrow(() -> ApiException.notFound("No hay ninguna cuenta con ese correo."));
     }
 
     public Views.Auth login(Requests.Login input) {

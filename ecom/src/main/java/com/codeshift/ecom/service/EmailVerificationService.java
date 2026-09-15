@@ -71,20 +71,26 @@ public class EmailVerificationService {
     /**
      * Comprueba el código. Si acierta, la cuenta queda verificada y el registro
      * se borra: un código usado no sirve dos veces.
+     *
+     * noRollbackFor es imprescindible: este método participa en la transacción
+     * de quien lo llama, y sin esta regla el interceptor la marcaría como
+     * rollback-only al lanzar la excepción. Eso tiraría abajo el contador de
+     * intentos (dejando la fuerza bruta sin límite) y haría que el de fuera
+     * fallara con UnexpectedRollbackException en vez de devolver su mensaje.
      */
+    @Transactional(noRollbackFor = ApiException.class)
     public void confirm(User user, String code) {
         EmailVerification record = verifications.findByUserId(user.getId())
                 .orElseThrow(() -> ApiException.badRequest(
                         "No hay ningún código pendiente. Pide uno nuevo."));
 
-        if (Instant.now().isAfter(record.getExpiresAt())) {
-            verifications.delete(record);
+        // Ni al caducar ni al agotar intentos se borra la fila: si desapareciera,
+        // resend() perdería el sentAt con el que calcula la espera y se podría
+        // pedir un correo nuevo sin pausa, una y otra vez.
+        if (Instant.now().isAfter(record.getExpiresAt()))
             throw ApiException.badRequest("El código caducó. Pide uno nuevo.");
-        }
-        if (record.getAttempts() >= config.getVerification().getMaxAttempts()) {
-            verifications.delete(record);
+        if (record.getAttempts() >= config.getVerification().getMaxAttempts())
             throw ApiException.badRequest("Demasiados intentos fallidos. Pide un código nuevo.");
-        }
         if (!encoder.matches(code.trim(), record.getCodeHash())) {
             record.setAttempts(record.getAttempts() + 1);
             int left = config.getVerification().getMaxAttempts() - record.getAttempts();

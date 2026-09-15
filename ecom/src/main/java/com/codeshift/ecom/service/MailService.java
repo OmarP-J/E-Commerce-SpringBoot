@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +28,22 @@ import java.util.Map;
 public class MailService {
 
     private final MailProperties config;
-    private final RestClient.Builder clientBuilder = RestClient.builder();
+
+    /**
+     * Con tiempos de espera explícitos a propósito: el envío ocurre dentro de
+     * la transacción del registro, y el pool de conexiones a la base es de 5.
+     * Sin límite, un Brevo lento dejaría transacciones abiertas hasta agotar
+     * el pool y tumbar toda la API, no solo el registro.
+     */
+    private final RestClient.Builder clientBuilder = RestClient.builder()
+            .requestFactory(timeBoundedRequests());
+
+    private static SimpleClientHttpRequestFactory timeBoundedRequests() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(10));
+        return factory;
+    }
 
     public boolean isEnabled() {
         return config.isConfigured();

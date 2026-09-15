@@ -242,7 +242,7 @@ interface PaypalSdk {
               }
 
               <div class="payment-options">
-                @if (methods?.simulated) {
+                @if (simulatedAvailable) {
                   <label class="payment-option">
                     <input
                       type="radio"
@@ -349,6 +349,15 @@ export class CartComponent extends Page implements OnInit {
     this.load();
     this.loadPaymentMethods();
     this.handleStripeReturn();
+  }
+
+  /**
+   * Si la consulta de formas de pago falla (backend viejo sin ese endpoint, o
+   * un error pasajero), el pago simulado sigue disponible. Sin esto el carrito
+   * se quedaría sin ninguna opción y nadie podría terminar la compra.
+   */
+  get simulatedAvailable(): boolean {
+    return this.methods?.simulated ?? true;
   }
 
   /** Dirección y teléfono son obligatorios para cualquier forma de pago. */
