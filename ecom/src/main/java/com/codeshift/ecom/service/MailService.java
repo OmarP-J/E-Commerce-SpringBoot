@@ -79,12 +79,26 @@ public class MailService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             log.error("Error devuelto por Brevo (status {}): {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
             throw new ApiException(HttpStatus.BAD_GATEWAY,
-                    "No pudimos enviar el correo de verificación (Brevo: " + e.getResponseBodyAsString() + ").");
+                    "No pudimos enviar el correo de verificación (Brevo " + describe(e) + ").");
         } catch (RestClientException e) {
             log.error("No se pudo enviar el correo a {}", maskEmail(toEmail), e);
             throw new ApiException(HttpStatus.BAD_GATEWAY,
                     "No pudimos enviar el correo en este momento. Inténtalo de nuevo en un minuto.");
         }
+    }
+
+    /**
+     * Brevo a veces responde un error con el cuerpo vacío. Sin el código de
+     * estado no hay forma de distinguir una clave inválida de una cuenta sin
+     * activar, así que el código siempre viaja en el mensaje.
+     */
+    private static String describe(org.springframework.web.client.RestClientResponseException e) {
+        String body = e.getResponseBodyAsString();
+        if (body == null || body.isBlank())
+            body = "sin detalle";
+        else if (body.length() > 200)
+            body = body.substring(0, 200);
+        return e.getStatusCode().value() + ": " + body;
     }
 
     /** Para el log local: deja el cuerpo legible sin etiquetas. */
