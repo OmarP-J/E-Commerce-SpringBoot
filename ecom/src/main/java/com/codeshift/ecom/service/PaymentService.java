@@ -14,6 +14,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -98,13 +99,19 @@ public class PaymentService {
                         "amount", Map.of(
                                 "currency_code", config.getCurrency(),
                                 "value", amountString(total)))));
-        JsonNode response = paypalClient().post()
-                .uri("/v2/checkout/orders")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + paypalToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
-                .retrieve()
-                .body(JsonNode.class);
+        JsonNode response;
+        try {
+            response = paypalClient().post()
+                    .uri("/v2/checkout/orders")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + paypalToken())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("PayPal rechazó la creación de la orden", e);
+            throw gatewayError("PayPal no pudo crear la orden." + detail(e));
+        }
         String id = text(response, "id");
         if (id == null)
             throw gatewayError("PayPal no devolvió un identificador de orden.");
@@ -159,7 +166,7 @@ public class PaymentService {
             return token;
         } catch (RestClientException e) {
             log.warn("No se pudo autenticar contra PayPal", e);
-            throw gatewayError("No se pudo conectar con PayPal. Revisa las credenciales.");
+            throw gatewayError("No se pudo conectar con PayPal. Revisa las credenciales." + detail(e));
         }
     }
 
@@ -200,7 +207,7 @@ public class PaymentService {
             return new StripeSession(id, url);
         } catch (RestClientException e) {
             log.warn("No se pudo crear la sesión de Stripe", e);
-            throw gatewayError("No se pudo conectar con Stripe. Revisa las credenciales.");
+            throw gatewayError("No se pudo conectar con Stripe. Revisa las credenciales." + detail(e));
         }
     }
 
@@ -270,6 +277,21 @@ public class PaymentService {
     private void requireAvailable(PaymentProvider provider) {
         if (!isAvailable(provider))
             throw ApiException.badRequest("Esa forma de pago no está disponible.");
+    }
+
+    /**
+     * Lo que respondió la pasarela, no lo que supusimos. "Revisa las
+     * credenciales" no dice cuál credencial ni por qué; el estado y el cuerpo
+     * del error sí. Solo en modo de prueba: en LIVE no se exponen las tripas
+     * de la pasarela al comprador.
+     */
+    private String detail(RestClientException e) {
+        if (!isTestMode() || !(e instanceof RestClientResponseException http))
+            return "";
+        String body = http.getResponseBodyAsString();
+        if (body.length() > 220)
+            body = body.substring(0, 220);
+        return " (" + http.getStatusCode().value() + (body.isBlank() ? "" : ": " + body) + ")";
     }
 
     private ApiException gatewayError(String message) {

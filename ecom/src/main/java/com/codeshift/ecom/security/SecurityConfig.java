@@ -34,7 +34,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/v3/api-docs",
                                 "/actuator/health",
-                                "/actuator/health/**")
+                                "/actuator/health/**",
+                                // Sin esto, cualquier excepción no capturada en un controlador
+                                // se reenvía a /error, cae en denyAll y el usuario recibe un
+                                // 401 "Inicia sesión" — el frontend lo lee como sesión vencida
+                                // y lo echa al login, ocultando el error de verdad.
+                                "/error")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/inventory/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER")
