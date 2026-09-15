@@ -346,9 +346,10 @@ export class CartComponent extends Page implements OnInit {
   }
 
   ngOnInit(): void {
-    this.load();
-    this.loadPaymentMethods();
-    this.handleStripeReturn();
+    // El regreso de Stripe crea un pedido, así que espera a que load() suelte
+    // el candado de execute; si arranca en el mismo ciclo, se descarta solo.
+    void this.load().then(() => this.handleStripeReturn());
+    void this.loadPaymentMethods();
   }
 
   /**
@@ -365,8 +366,8 @@ export class CartComponent extends Page implements OnInit {
     return this.address.trim().length > 0 && this.phone.trim().length >= 7;
   }
 
-  private loadPaymentMethods(): void {
-    void this.execute(async () => {
+  private loadPaymentMethods(): Promise<void> {
+    return this.executeQuiet(async () => {
       this.methods = await this.api.get<PaymentMethods>(
         "/customer/payments/methods",
       );
@@ -518,8 +519,8 @@ export class CartComponent extends Page implements OnInit {
     await this.router.navigateByUrl("/orders");
   }
 
-  load(): void {
-    void this.execute(async () => {
+  load(): Promise<void> {
+    return this.execute(async () => {
       [this.cart, this.addresses] = await Promise.all([
         this.api.get<Cart>("/customer/cart"),
         this.api.get<Address[]>("/customer/addresses"),

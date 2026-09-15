@@ -23,6 +23,23 @@ export abstract class Page implements OnDestroy {
     }
   }
 
+  /**
+   * Para lecturas de fondo que arrancan junto a otra carga.
+   *
+   * `execute` lleva un candado para que nadie confirme dos veces la misma
+   * compra: si ya hay algo en curso, descarta la acción. Eso es correcto para
+   * lo que envía el usuario, pero mortal para una consulta lanzada en el mismo
+   * ciclo que otra — la segunda se perdía en silencio y nadie se enteraba.
+   */
+  protected async executeQuiet(action: () => Promise<void>): Promise<void> {
+    this.session.message.set("");
+    try {
+      await action();
+    } catch {
+      /* ApiService already shows a useful error to the user. */
+    }
+  }
+
   /** Waits briefly before searching so typing does not make one request per key. */
   protected debounce(key: string, action: () => void, delay = 300): void {
     const previous = this.timers.get(key);
