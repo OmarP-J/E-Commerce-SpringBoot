@@ -235,6 +235,31 @@ small {
   font-size: 0.92rem;
   white-space: nowrap;
   padding: 0.7rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.site-header nav .icon {
+  display: block;
+  flex: none;
+}
+/* En la barra manda el icono; el nombre lo da el aria-label de cada enlace.
+   En el cajón de móvil el texto vuelve, porque ahí sobra espacio y un icono
+   suelto no le dice nada a nadie. */
+@media (min-width: 901px) {
+  .site-header nav .nav-label {
+    display: none;
+  }
+  .site-header nav a:not(.button),
+  .site-header nav .logout-button {
+    padding: 0.55rem 0.35rem;
+  }
+  .site-header nav {
+    gap: clamp(0.5rem, 1.4vw, 1.1rem);
+  }
+  .site-header nav a:not(.button)::after {
+    bottom: 0.1rem;
+  }
 }
 .site-header nav a:not(.button)::after {
   content: "";
@@ -257,12 +282,20 @@ small {
   padding: 0.48rem 0.9rem !important;
   border: 1px solid var(--green);
   border-radius: 999px;
+  color: var(--green) !important;
 }
 .nav-pill::after {
   display: none;
 }
 .logout-button {
   font-size: 0.92rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ink);
+}
+.logout-button:hover {
+  color: var(--green);
 }
 .menu-toggle {
   display: none;
@@ -2011,6 +2044,25 @@ th {
     text-align: center;
     margin-top: 0.35rem;
     box-sizing: border-box;
+  }
+  /* Aquí el icono acompaña al texto en vez de sustituirlo: una columna de
+     iconos sueltos obliga a adivinar, y el cajón tiene sitio de sobra. */
+  .site-header nav .icon {
+    margin-right: 0.7rem;
+  }
+  .site-header nav .logout-button {
+    justify-content: flex-start;
+    padding: 0.68rem 0.8rem;
+    font-weight: 600;
+    border-radius: 12px;
+  }
+  .site-header nav .logout-button .icon {
+    margin-right: 0.7rem;
+  }
+  .nav-pill {
+    justify-content: flex-start !important;
+    padding: 0.68rem 0.8rem !important;
+    border-radius: 12px !important;
   }
   .landing-hero {
     grid-template-columns: 1fr;

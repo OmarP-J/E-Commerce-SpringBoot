@@ -7,10 +7,11 @@ import {
   RouterOutlet,
 } from "@angular/router";
 import { SessionService } from "./core/session.service";
+import { IconComponent } from "./core/icon.component";
 
 @Component({
   selector: "app-root",
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
   template: `
     <a class="skip-link" href="#main">Saltar al contenido</a>
     <div class="demo-bar">
@@ -44,45 +45,65 @@ import { SessionService } from "./core/session.service";
           routerLinkActive="selected"
           [routerLinkActiveOptions]="{ exact: true }"
           (click)="closeMenu()"
-          >Inicio</a
+          aria-label="Inicio"
+          title="Inicio"
+          ><app-icon name="home" /><span class="nav-label">Inicio</span></a
         >
         <a
           routerLink="/catalog"
           routerLinkActive="selected"
           (click)="closeMenu()"
-          >Catálogo</a
+          aria-label="Catálogo"
+          title="Catálogo"
+          ><app-icon name="catalog" /><span class="nav-label">Catálogo</span></a
         >
         @if (session.user()?.role === "CUSTOMER") {
           <a
             routerLink="/wishlist"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Favoritos</a
+            aria-label="Favoritos"
+            title="Favoritos"
+            ><app-icon name="heart" /><span class="nav-label"
+              >Favoritos</span
+            ></a
           >
           <a
             routerLink="/orders"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Pedidos</a
+            aria-label="Pedidos"
+            title="Pedidos"
+            ><app-icon name="package" /><span class="nav-label"
+              >Pedidos</span
+            ></a
           >
           <a
             routerLink="/addresses"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Direcciones</a
+            aria-label="Direcciones"
+            title="Direcciones"
+            ><app-icon name="pin" /><span class="nav-label"
+              >Direcciones</span
+            ></a
           >
           <a
             routerLink="/support-requests"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Ayuda</a
+            aria-label="Ayuda"
+            title="Ayuda"
+            ><app-icon name="help" /><span class="nav-label">Ayuda</span></a
           >
           <a
             routerLink="/cart"
             routerLinkActive="selected"
             (click)="closeMenu()"
             class="nav-pill"
-            >Carrito</a
+            aria-label="Carrito"
+            title="Carrito"
+            ><app-icon name="cart" /><span class="nav-label">Carrito</span></a
           >
         }
         @if (session.user()?.role === "ADMIN") {
@@ -90,25 +111,39 @@ import { SessionService } from "./core/session.service";
             routerLink="/admin"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Administración</a
+            aria-label="Administración"
+            title="Administración"
+            ><app-icon name="admin" /><span class="nav-label"
+              >Administración</span
+            ></a
           >
           <a
             routerLink="/admin/orders"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Pedidos</a
+            aria-label="Pedidos"
+            title="Pedidos"
+            ><app-icon name="orders" /><span class="nav-label">Pedidos</span></a
           >
           <a
             routerLink="/inventory"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Inventario</a
+            aria-label="Inventario"
+            title="Inventario"
+            ><app-icon name="inventory" /><span class="nav-label"
+              >Inventario</span
+            ></a
           >
           <a
             routerLink="/support"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Soporte</a
+            aria-label="Soporte"
+            title="Soporte"
+            ><app-icon name="support" /><span class="nav-label"
+              >Soporte</span
+            ></a
           >
         }
         @if (session.user()?.role === "INVENTORY_MANAGER") {
@@ -116,7 +151,11 @@ import { SessionService } from "./core/session.service";
             routerLink="/inventory"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Inventario</a
+            aria-label="Inventario"
+            title="Inventario"
+            ><app-icon name="inventory" /><span class="nav-label"
+              >Inventario</span
+            ></a
           >
         }
         @if (session.user()?.role === "CUSTOMER_SUPPORT") {
@@ -124,7 +163,11 @@ import { SessionService } from "./core/session.service";
             routerLink="/support"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Atención al cliente</a
+            aria-label="Atención al cliente"
+            title="Atención al cliente"
+            ><app-icon name="support" /><span class="nav-label"
+              >Atención al cliente</span
+            ></a
           >
         }
         @if (session.user()) {
@@ -132,16 +175,25 @@ import { SessionService } from "./core/session.service";
             routerLink="/profile"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Mi cuenta</a
-          ><button class="text-button logout-button" (click)="logout()">
-            Salir
+            aria-label="Mi cuenta"
+            title="Mi cuenta"
+            ><app-icon name="user" /><span class="nav-label">Mi cuenta</span></a
+          ><button
+            class="text-button logout-button"
+            (click)="logout()"
+            aria-label="Salir"
+            title="Salir"
+          >
+            <app-icon name="logout" /><span class="nav-label">Salir</span>
           </button>
         } @else {
           <a
             routerLink="/login"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            >Ingresar</a
+            aria-label="Ingresar"
+            title="Ingresar"
+            ><app-icon name="login" /><span class="nav-label">Ingresar</span></a
           >
           <a routerLink="/signup" class="button small" (click)="closeMenu()"
             >Crear cuenta</a
