@@ -4,9 +4,18 @@ import { Title } from "@angular/platform-browser";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Cart, Product } from "../core/models";
 import { Page } from "../core/page";
+import { StarsComponent } from "../core/stars.component";
+import { IconComponent } from "../core/icon.component";
+import { ProductReviewsComponent } from "./product-reviews.component";
 
 @Component({
-  imports: [CurrencyPipe, RouterLink],
+  imports: [
+    CurrencyPipe,
+    RouterLink,
+    StarsComponent,
+    ProductReviewsComponent,
+    IconComponent,
+  ],
   template: `
     @if (busy && !product) {
       <div class="page-loader" role="status">
@@ -31,6 +40,14 @@ import { Page } from "../core/page";
         <div class="detail-content">
           <span class="kicker">{{ item.categoryName }}</span>
           <h1>{{ item.name }}</h1>
+          @if (item.rating && item.reviewCount) {
+            <a class="detail-rating" href="#opiniones" (click)="toReviews($event)"
+              ><app-stars [value]="item.rating" /><span
+                >{{ item.reviewCount }}
+                {{ item.reviewCount === 1 ? "opinión" : "opiniones" }}</span
+              ></a
+            >
+          }
           <p class="detail-description">{{ item.description }}</p>
           <strong class="detail-price">{{
             item.price | currency: "DOP" : "symbol"
@@ -49,32 +66,36 @@ import { Page } from "../core/page";
                 [disabled]="busy || !item.active || item.stock === 0"
                 (click)="add(item)"
               >
-                Añadir al carrito <span aria-hidden="true">→</span></button
+                Añadir al carrito <app-icon name="arrow-right" /></button
               ><button
                 class="secondary"
                 [disabled]="busy"
                 (click)="favorite(item)"
               >
-                <span aria-hidden="true">♡</span> Guardar en favoritos
+                <app-icon name="heart" /> Guardar en favoritos
               </button>
             </div>
           }
           <!-- Solo afirmaciones que el sitio cumple de verdad. -->
           <div class="detail-benefits">
             <span
-              ><b>Carrito privado</b
+              ><app-icon name="lock" /><b>Carrito privado</b
               ><small>Solo lo ves tú, con tu cuenta</small></span
             ><span
-              ><b>Total antes de pagar</b
+              ><app-icon name="receipt" /><b>Total antes de pagar</b
               ><small>Con descuentos aplicados, antes de confirmar</small></span
             >
           </div>
         </div>
       </section>
+      <app-product-reviews
+        [productId]="item.id"
+        (summaryChange)="item.rating = $event.average; item.reviewCount = $event.count"
+      />
     }
     @if (!busy && !product) {
       <section class="empty-state">
-        <span aria-hidden="true">?</span>
+        <span aria-hidden="true"><app-icon name="search" /></span>
         <h1>Producto no encontrado</h1>
         <p>Puede que ya no esté disponible.</p>
         <a class="button" routerLink="/catalog">Volver al catálogo</a>
@@ -87,6 +108,11 @@ export class ProductDetailComponent extends Page implements OnInit {
   private readonly router = inject(Router);
   private readonly title = inject(Title);
   product: Product | null = null;
+  /** Con <base href="/">, "#opiniones" apuntaría a la portada: se salta a mano. */
+  toReviews(event: Event): void {
+    event.preventDefault();
+    document.getElementById("opiniones")?.scrollIntoView({ behavior: "smooth" });
+  }
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get("id"));
     if (!Number.isInteger(id) || id < 1) return;

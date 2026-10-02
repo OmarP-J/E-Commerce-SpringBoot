@@ -45,6 +45,15 @@ public class ShopOrder {
     private BigDecimal total;
     @Column(length = 30)
     private String couponCode;
+    /*
+     * Momento en que el pedido llegó a cada estado, para la línea de tiempo
+     * que ve el cliente. Son nulos mientras no pasa por ese estado y en los
+     * pedidos creados antes de que existieran estas columnas.
+     */
+    private Instant processingAt;
+    private Instant shippedAt;
+    private Instant deliveredAt;
+    private Instant cancelledAt;
     @ElementCollection
     @CollectionTable(name = "order_lines", joinColumns = @JoinColumn(name = "order_id"))
     @OrderColumn(name = "line_number")

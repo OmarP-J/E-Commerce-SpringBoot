@@ -33,6 +33,16 @@ CREATE TABLE email_verifications (
     attempts INT NOT NULL DEFAULT 0
 );
 
+-- Códigos para recuperar la contraseña. Una fila por usuario.
+CREATE TABLE password_resets (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES shop_users(id) ON DELETE CASCADE,
+    code_hash VARCHAR(100) NOT NULL,
+    expires_at DATETIMEOFFSET(7) NOT NULL,
+    sent_at DATETIMEOFFSET(7) NOT NULL,
+    attempts INT NOT NULL DEFAULT 0
+);
+
 CREATE TABLE products (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(120) NOT NULL,
@@ -48,6 +58,21 @@ CREATE TABLE products (
 );
 CREATE INDEX ix_products_category ON products(category_id);
 CREATE INDEX ix_products_name ON products(name);
+
+-- Reseñas de compradores verificados: una por cliente y producto.
+CREATE TABLE product_reviews (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    author_id BIGINT NOT NULL REFERENCES shop_users(id) ON DELETE CASCADE,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment NVARCHAR(1000) NULL,
+    hidden BIT NOT NULL DEFAULT 0,
+    hidden_reason NVARCHAR(300) NULL,
+    created_at DATETIMEOFFSET(7) NOT NULL,
+    updated_at DATETIMEOFFSET(7) NOT NULL,
+    CONSTRAINT uq_review_product_author UNIQUE (product_id, author_id)
+);
+CREATE INDEX ix_reviews_product ON product_reviews(product_id, hidden, created_at DESC);
 
 CREATE TABLE wishlist (
     user_id BIGINT NOT NULL REFERENCES shop_users(id) ON DELETE CASCADE,
@@ -77,6 +102,10 @@ CREATE TABLE shop_orders (
     discount DECIMAL(16,2) NOT NULL,
     total DECIMAL(16,2) NOT NULL,
     coupon_code NVARCHAR(30) NULL,
+    processing_at DATETIMEOFFSET(7) NULL,
+    shipped_at DATETIMEOFFSET(7) NULL,
+    delivered_at DATETIMEOFFSET(7) NULL,
+    cancelled_at DATETIMEOFFSET(7) NULL,
     CONSTRAINT uq_order_request UNIQUE (user_id, request_key)
 );
 CREATE INDEX ix_orders_user_created ON shop_orders(user_id, created_at DESC);

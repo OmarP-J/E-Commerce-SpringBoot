@@ -64,6 +64,14 @@ export const routes: Routes = [
     data: { signup: true },
   },
   {
+    path: "forgot-password",
+    title: title("Recuperar contraseña"),
+    loadComponent: () =>
+      import("./pages/password-reset.component").then(
+        (m) => m.PasswordResetComponent,
+      ),
+  },
+  {
     path: "verify",
     title: title("Verificar correo"),
     loadComponent: () =>
@@ -169,6 +177,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import("./pages/orders.component").then((m) => m.OrdersComponent),
     data: { admin: true },
+  },
+  {
+    path: "admin/reviews",
+    title: title("Reseñas"),
+    canActivate: [admin],
+    loadComponent: () =>
+      import("./pages/admin-reviews.component").then(
+        (m) => m.AdminReviewsComponent,
+      ),
   },
   {
     path: "inventory",

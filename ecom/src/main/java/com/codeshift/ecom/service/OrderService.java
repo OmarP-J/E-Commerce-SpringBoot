@@ -4,10 +4,12 @@ import com.codeshift.ecom.api.*;
 import com.codeshift.ecom.model.*;
 import com.codeshift.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -23,6 +25,7 @@ public class OrderService {
     private final SettingsService settings;
     private final InventoryMovementRepository movements;
     private final PaymentService payments;
+    private final ApplicationEventPublisher events;
 
     public Views.OrderView checkout(String email, Requests.Checkout input) {
         PaymentProvider provider = input.providerOrDefault();
@@ -101,6 +104,7 @@ public class OrderService {
                     change.previousStock(), change.newStock(), "Salida por pedido #" + order.getId());
         cart.deleteAll(items);
         user.setCartCoupon(null);
+        events.publishEvent(OrderNotification.of(order));
         return Views.OrderView.of(order);
     }
 
@@ -141,7 +145,17 @@ public class OrderService {
             }
             order.setPaymentStatus("SIMULATED_CANCELLED");
         }
+        Instant now = Instant.now();
+        switch (next) {
+            case PROCESSING -> order.setProcessingAt(now);
+            case SHIPPED -> order.setShippedAt(now);
+            case DELIVERED -> order.setDeliveredAt(now);
+            case CANCELLED -> order.setCancelledAt(now);
+            case CONFIRMED -> {
+            }
+        }
         order.setStatus(next);
+        events.publishEvent(OrderNotification.of(order));
         return Views.OrderView.of(order);
     }
 

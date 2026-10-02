@@ -25,6 +25,7 @@ public class CatalogService {
     private final CouponRepository coupons;
     private final InventoryMovementRepository movements;
     private final UserRepository users;
+    private final ReviewService reviews;
 
     @Transactional(readOnly = true)
     public Views.PageView<Views.ProductView> list(String search, Long categoryId, int page, int size, boolean admin) {
@@ -32,8 +33,9 @@ public class CatalogService {
             throw ApiException.badRequest("Filtros inválidos.");
         var result = products.search(normalizeSearch(search), categoryId, admin,
                 PageRequest.of(page, size, Sort.by("id").descending()));
-        return new Views.PageView<>(result.map(admin ? Views.ProductView::ofAdmin : Views.ProductView::of).getContent(),
-                result.getTotalElements(), page, result.getTotalPages());
+        var items = result.map(admin ? Views.ProductView::ofAdmin : Views.ProductView::of).getContent();
+        return new Views.PageView<>(reviews.withRatings(items), result.getTotalElements(), page,
+                result.getTotalPages());
     }
 
     public Product find(Long id) {
@@ -44,7 +46,7 @@ public class CatalogService {
         Product p = find(id);
         if (!p.isActive())
             throw ApiException.notFound("Producto no disponible.");
-        return Views.ProductView.of(p);
+        return reviews.withRatings(List.of(Views.ProductView.of(p))).get(0);
     }
 
     public Views.ProductView save(String actorEmail, Long id, Requests.ProductInput input) {

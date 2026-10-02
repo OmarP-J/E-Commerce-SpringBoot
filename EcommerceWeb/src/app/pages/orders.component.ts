@@ -4,23 +4,29 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { Order, OrderStatus, statusLabels } from "../core/models";
 import { Page } from "../core/page";
+import { IconComponent } from "../core/icon.component";
+import { AdminNavComponent } from "./admin-nav.component";
+
+interface TimelineStep {
+  label: string;
+  at: string | null;
+  done: boolean;
+  current: boolean;
+  cancelled: boolean;
+}
 
 @Component({
-  imports: [CurrencyPipe, DatePipe, RouterLink, FormsModule],
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    RouterLink,
+    FormsModule,
+    AdminNavComponent,
+    IconComponent,
+  ],
   template: `
     @if (adminView) {
-      <nav
-        class="admin-subnav admin-subnav-top"
-        aria-label="Secciones de administración"
-      >
-        <a routerLink="/admin">Resumen</a
-        ><a routerLink="/admin/products">Productos</a
-        ><a routerLink="/admin/categories">Categorías</a
-        ><a routerLink="/admin/coupons">Cupones</a
-        ><a class="active" routerLink="/admin/orders">Pedidos</a
-        ><a routerLink="/admin/users">Usuarios</a
-        ><a routerLink="/admin/settings">Configuración</a>
-      </nav>
+      <app-admin-nav [top]="true" />
     }
     <div class="section-heading">
       <div>
@@ -85,6 +91,30 @@ import { Page } from "../core/page";
             }}</span>
           </div>
 
+          <ol
+            class="order-timeline"
+            [attr.aria-label]="'Seguimiento del pedido ' + order.id"
+          >
+            @for (step of timeline(order); track step.label) {
+              <li
+                [class.done]="step.done"
+                [class.current]="step.current"
+                [class.cancelled]="step.cancelled"
+                [attr.aria-current]="step.current ? 'step' : null"
+              >
+                <span class="timeline-dot" aria-hidden="true"></span>
+                <span class="timeline-label">{{ step.label }}</span>
+                @if (step.at) {
+                  <time [attr.datetime]="step.at">{{
+                    step.at | date: "d MMM, h:mm a"
+                  }}</time>
+                } @else if (!step.done) {
+                  <span class="sr-only">pendiente</span>
+                }
+              </li>
+            }
+          </ol>
+
           <div class="split">
             <div>
               <h3>Productos</h3>
@@ -96,6 +126,16 @@ import { Page } from "../core/page";
                       line.unitPrice * line.quantity
                         | currency: "DOP" : "symbol"
                     }}</strong>
+                    @if (!adminView && order.status === "DELIVERED") {
+                      <a
+                        class="line-review-link"
+                        [routerLink]="['/products', line.productId]"
+                        fragment="opiniones"
+                        >Opinar<span class="sr-only">
+                          sobre {{ line.productName }}</span
+                        ></a
+                      >
+                    }
                   </li>
                 }
               </ul>
@@ -171,6 +211,7 @@ import { Page } from "../core/page";
       } @empty {
         @if (!busy) {
           <section class="empty panel">
+            <span class="empty-icon" aria-hidden="true"><app-icon name="package" /></span>
             <h2>
               {{
                 search.trim() || statusFilter
@@ -283,6 +324,52 @@ export class OrdersComponent extends Page implements OnInit {
         this.page = this.totalPages - 1;
       }
     });
+  }
+
+  /**
+   * Pasos que ve el cliente. Un pedido cancelado muestra hasta dónde llegó y
+   * después la cancelación; los pedidos anteriores a las fechas por estado
+   * muestran los pasos cumplidos sin fecha.
+   */
+  timeline(order: Order): TimelineStep[] {
+    const steps: { status: OrderStatus; at: string | null }[] = [
+      { status: "CONFIRMED", at: order.createdAt },
+      { status: "PROCESSING", at: order.processingAt },
+      { status: "SHIPPED", at: order.shippedAt },
+      { status: "DELIVERED", at: order.deliveredAt },
+    ];
+    if (order.status === "CANCELLED") {
+      return [
+        ...steps
+          .filter((step) => step.status === "CONFIRMED" || step.at)
+          .map((step) => this.step(step.status, step.at, true, false)),
+        this.step("CANCELLED", order.cancelledAt, true, true),
+      ];
+    }
+    const reached = steps.findIndex((step) => step.status === order.status);
+    return steps.map((step, index) =>
+      this.step(
+        step.status,
+        index <= reached ? step.at : null,
+        index <= reached,
+        index === reached,
+      ),
+    );
+  }
+
+  private step(
+    status: OrderStatus,
+    at: string | null,
+    done: boolean,
+    current: boolean,
+  ): TimelineStep {
+    return {
+      label: this.labels[status],
+      at,
+      done,
+      current,
+      cancelled: status === "CANCELLED",
+    };
   }
 
   nextStatuses(current: OrderStatus): OrderStatus[] {

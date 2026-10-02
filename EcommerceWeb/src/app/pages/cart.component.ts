@@ -11,6 +11,7 @@ import {
   PaymentProvider,
 } from "../core/models";
 import { Page } from "../core/page";
+import { IconComponent } from "../core/icon.component";
 
 /** Trozo mínimo del SDK de PayPal que usamos. */
 interface PaypalSdk {
@@ -22,7 +23,7 @@ interface PaypalSdk {
 }
 
 @Component({
-  imports: [CurrencyPipe, FormsModule, RouterLink],
+  imports: [CurrencyPipe, FormsModule, RouterLink, IconComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -41,6 +42,7 @@ interface PaypalSdk {
     @if (cart; as currentCart) {
       @if (currentCart.items.length === 0) {
         <section class="empty panel">
+          <span class="empty-icon" aria-hidden="true"><app-icon name="cart" /></span>
           <h2>Tu carrito está vacío.</h2>
           <p>Explora el catálogo y añade los productos que quieras comprar.</p>
           <a class="button" routerLink="/catalog">Ver productos</a>
@@ -81,7 +83,7 @@ interface PaypalSdk {
                         'Quitar una unidad de ' + line.product.name
                       "
                     >
-                      −
+                      <app-icon name="minus" />
                     </button>
                     <strong aria-live="polite">{{ line.quantity }}</strong>
                     <button
@@ -93,7 +95,7 @@ interface PaypalSdk {
                         'Añadir una unidad de ' + line.product.name
                       "
                     >
-                      +
+                      <app-icon name="plus" />
                     </button>
                   </div>
                 </div>

@@ -15,6 +15,24 @@ public class CustomerController {
     private final OrderService orders;
     private final AddressService addresses;
     private final SupportService support;
+    private final ReviewService reviews;
+
+    @GetMapping("/reviews/{productId}")
+    public Views.MyReview review(Principal p, @PathVariable Long productId) {
+        return reviews.mine(p.getName(), productId);
+    }
+
+    @PutMapping("/reviews/{productId}")
+    public Views.MyReview review(Principal p, @PathVariable Long productId,
+            @Valid @RequestBody Requests.ReviewInput input) {
+        return reviews.save(p.getName(), productId, input);
+    }
+
+    @DeleteMapping("/reviews/{productId}")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void deleteReview(Principal p, @PathVariable Long productId) {
+        reviews.delete(p.getName(), productId);
+    }
 
     @GetMapping("/cart")
     public Views.CartView cart(Principal p) {

@@ -28,6 +28,17 @@ public class AuthController {
         accounts.resendCode(input);
     }
 
+    @PostMapping("/api/auth/password-reset")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void requestPasswordReset(@Valid @RequestBody Requests.PasswordResetRequest input) {
+        accounts.requestPasswordReset(input);
+    }
+
+    @PostMapping("/api/auth/password-reset/confirm")
+    public Views.Auth resetPassword(@Valid @RequestBody Requests.PasswordResetConfirm input) {
+        return accounts.resetPassword(input);
+    }
+
     @PostMapping("/api/auth/login")
     public Views.Auth login(@Valid @RequestBody Requests.Login input) {
         return accounts.login(input);

@@ -9,9 +9,10 @@ import {
   statusLabels,
 } from "../core/models";
 import { Page } from "../core/page";
+import { IconComponent } from "../core/icon.component";
 
 @Component({
-  imports: [CurrencyPipe, DatePipe, FormsModule],
+  imports: [CurrencyPipe, DatePipe, FormsModule, IconComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -97,6 +98,7 @@ import { Page } from "../core/page";
         } @empty {
           @if (!busy) {
             <section class="empty panel">
+              <span class="empty-icon" aria-hidden="true"><app-icon name="support" /></span>
               <h2>{{ caseSearch.trim() || caseStatusFilter ? "No hay solicitudes para este filtro." : "No hay solicitudes." }}</h2>
               <p>{{ caseSearch.trim() || caseStatusFilter ? "Prueba cambiando los términos de búsqueda." : "La bandeja está al día." }}</p>
             </section>

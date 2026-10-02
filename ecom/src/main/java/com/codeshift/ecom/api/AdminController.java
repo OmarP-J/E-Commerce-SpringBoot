@@ -17,6 +17,18 @@ public class AdminController {
     private final OrderService orders;
     private final AccountService accounts;
     private final SettingsService settings;
+    private final ReviewService reviews;
+
+    @GetMapping("/reviews")
+    public List<Views.AdminReviewView> reviews() {
+        return reviews.all();
+    }
+
+    @PutMapping("/reviews/{id}/visibility")
+    public Views.AdminReviewView reviewVisibility(@PathVariable Long id,
+            @Valid @RequestBody Requests.ReviewVisibility input) {
+        return reviews.visibility(id, input);
+    }
 
     @GetMapping("/products")
     public Views.PageView<Views.ProductView> products(@RequestParam(defaultValue = "") String q,

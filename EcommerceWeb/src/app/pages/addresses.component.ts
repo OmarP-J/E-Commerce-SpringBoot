@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Address } from "../core/models";
 import { Page } from "../core/page";
+import { IconComponent } from "../core/icon.component";
 
 interface AddressDraft {
   id: number | null;
@@ -14,7 +15,7 @@ interface AddressDraft {
 }
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -153,6 +154,7 @@ interface AddressDraft {
         } @empty {
           @if (!busy) {
             <section class="empty panel">
+              <span class="empty-icon" aria-hidden="true"><app-icon name="pin" /></span>
               <h2>No tienes direcciones guardadas.</h2>
               <p>Crea la primera con el formulario.</p>
             </section>

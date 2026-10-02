@@ -92,13 +92,33 @@ el código: si llega y lo escriben, el correo es real y es suyo.
 | POST | `/api/auth/signup` | `{name, email, password, acceptTerms: true}` → devuelve `{verificationRequired, email, session}`. Si hace falta verificar, `session` viene vacío. Sin `acceptTerms: true` responde 400 |
 | POST | `/api/auth/verify` | `{email, code}` → devuelve la sesión iniciada |
 | POST | `/api/auth/verify/resend` | `{email}` → manda otro código |
+| POST | `/api/auth/password-reset` | `{email}` → manda un código para cambiar la contraseña. Responde 204 exista o no la cuenta; 503 si no hay forma de enviar correos |
+| POST | `/api/auth/password-reset/confirm` | `{email, code, newPassword}` → cambia la contraseña, deja la cuenta verificada y devuelve la sesión iniciada |
 
 El login de una cuenta sin verificar responde 403 y el frontend lleva a la
 pantalla del código.
 
-## Lo que queda cerca
+## Recuperar la contraseña
 
-Con esta plumbing ya montada, **recuperar la contraseña** es el siguiente paso
-natural y reutiliza casi todo: el mismo `MailService`, la misma idea de código
-con expiración. Es el hueco más grave que le queda al proyecto para usuarios
-reales.
+Usa los mismos límites que la verificación: código de 6 dígitos guardado
+cifrado, 15 minutos de validez, 5 intentos y 60 segundos entre envíos. Los
+códigos van en su propia tabla (`password_resets`), así que un código de
+recuperación nunca sirve para verificar una cuenta, ni al revés.
+
+Para no revelar qué correos tienen cuenta, pedir un código responde siempre
+igual; si se pide otro antes de los 60 segundos, simplemente no se envía.
+
+## Avisos de pedidos
+
+Cada pedido confirmado y cada cambio de estado (en preparación, enviado,
+entregado, cancelado) manda un correo al cliente. Se envía en segundo plano y
+solo cuando el cambio ya quedó guardado: si Brevo falla o tarda, la compra y el
+panel siguen funcionando y el fallo queda en el log.
+
+## Probar en local sin Brevo
+
+El perfil `dev` activa `app.mail.dev-log-delivery=true`: los avisos de pedidos
+y los códigos de recuperación se escriben en la consola del backend en vez de
+enviarse. **Nunca lo actives en producción**: el log mostraría códigos y
+correos. La verificación al registrarse sigue necesitando Brevo, como antes.
+

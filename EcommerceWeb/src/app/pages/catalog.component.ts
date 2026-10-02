@@ -4,9 +4,11 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Page } from "../core/page";
 import { Cart, Category, PageResult, Product } from "../core/models";
+import { StarsComponent } from "../core/stars.component";
+import { IconComponent } from "../core/icon.component";
 
 @Component({
-  imports: [FormsModule, CurrencyPipe, RouterLink],
+  imports: [FormsModule, CurrencyPipe, RouterLink, StarsComponent, IconComponent],
   templateUrl: "./catalog.component.html",
 })
 export class CatalogComponent extends Page implements OnInit {

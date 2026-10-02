@@ -63,17 +63,22 @@ Como cliente:
 3. Añade productos al carrito y cambia sus cantidades.
 4. Aplica `BIENVENIDA10` y comprueba el descuento.
 5. Confirma que aceptas el pago simulado, indica dirección y teléfono y crea el pedido.
-6. Consulta el pedido en **Mis pedidos** y actualiza tu nombre o contraseña en **Mi cuenta**.
-7. Guarda direcciones de entrega y abre solicitudes de devolución, cambio, reembolso o reclamo.
+6. Consulta el pedido en **Mis pedidos** y sigue su línea de tiempo: cada cambio de estado también llega por correo.
+7. Cuando el administrador lo marque como entregado, pulsa **Opinar** y deja una reseña con estrellas.
+8. Actualiza tu nombre o contraseña en **Mi cuenta**, o usa **¿Olvidaste tu contraseña?** en el inicio de sesión para recibir un código.
+9. Guarda direcciones de entrega y abre solicitudes de devolución, cambio, reembolso o reclamo.
 
 Como administrador:
 
 1. Inicia sesión con la cuenta de demostración.
 2. Crea o edita categorías, productos y cupones.
 3. Ajusta precio, costo, inventario y disponibilidad, y sube imágenes PNG o JPEG de hasta 2 MB y 16 megapíxeles.
-4. Consulta los pedidos y avanza su estado.
+4. Consulta los pedidos y avanza su estado; el cliente recibe un correo en cada paso.
 5. Asigna roles a los usuarios del sistema y configura el nombre, correo de soporte y nivel de alerta de stock.
 6. Revisa ventas, ganancia estimada, pedido promedio, reembolsos y productos con pocas existencias.
+7. Modera las reseñas en **Reseñas**: ocultar una exige un motivo, y nunca debe hacerse por ser negativa.
+
+En local no hace falta Brevo: con el perfil `dev`, los avisos de pedidos y los códigos para recuperar la contraseña se escriben en la consola del backend (`app.mail.dev-log-delivery=true`). En producción se envían por Brevo; sin Brevo configurado, la recuperación de contraseña responde que no está disponible y los avisos no se envían.
 
 Como gestor de inventario:
 
@@ -139,6 +144,8 @@ Todas las rutas parten de `/api`. Cliente usa `CUSTOMER`; Administración usa `A
 | `GET` | `/me` | Consultar el usuario autenticado. |
 | `PUT` | `/me` | Cambiar el nombre. |
 | `PUT` | `/me/password` | Cambiar la contraseña comprobando la actual. |
+| `POST` | `/auth/password-reset` | Pedir un código para cambiar una contraseña olvidada. Responde igual exista o no la cuenta. |
+| `POST` | `/auth/password-reset/confirm` | Cambiar la contraseña con `{email, code, newPassword}` y entrar. |
 
 ### Catálogo público
 
@@ -148,6 +155,7 @@ Todas las rutas parten de `/api`. Cliente usa `CUSTOMER`; Administración usa `A
 | `GET` | `/catalog/products/{id}` | Consultar un producto activo. |
 | `GET` | `/catalog/products/{id}/image` | Descargar su imagen. |
 | `GET` | `/catalog/categories` | Listar categorías. |
+| `GET` | `/catalog/products/{id}/reviews` | Media, reparto por estrellas y reseñas publicadas. Nunca incluye el correo del autor. |
 
 ### Cliente
 
@@ -164,6 +172,8 @@ Todas las rutas parten de `/api`. Cliente usa `CUSTOMER`; Administración usa `A
 | `GET` / `POST` | `/customer/support-cases` | Consultar o crear solicitudes de ayuda sobre pedidos propios. |
 | `GET` | `/customer/wishlist` | Consultar favoritos. |
 | `PUT` / `DELETE` | `/customer/wishlist/{productId}` | Añadir o retirar un favorito. |
+| `GET` | `/customer/reviews/{productId}` | Saber si puedes opinar y ver tu reseña. |
+| `PUT` / `DELETE` | `/customer/reviews/{productId}` | Publicar, editar o borrar tu reseña. Solo con un pedido entregado de ese producto. |
 
 `requestId` hace que repetir accidentalmente la misma solicitud de compra devuelva el mismo pedido en lugar de descontar dos veces el inventario.
 
@@ -184,6 +194,8 @@ Todas las rutas parten de `/api`. Cliente usa `CUSTOMER`; Administración usa `A
 | `GET` | `/admin/users` | Listar usuarios sin exponer contraseñas. |
 | `PUT` | `/admin/users/{id}/role` | Asignar Cliente, Administrador, Inventario o Soporte. |
 | `GET` / `PUT` | `/admin/settings` | Consultar o editar la configuración general. |
+| `GET` | `/admin/reviews` | Listar todas las reseñas para moderarlas. |
+| `PUT` | `/admin/reviews/{id}/visibility` | Ocultar (con motivo) o volver a publicar una reseña. |
 
 ### Inventario
 
@@ -249,7 +261,7 @@ cd ecom
 .\mvnw.cmd test
 ```
 
-Las diecinueve pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa, CORS, estado de la base, disponibilidad de la documentación OpenAPI y que el registro exija aceptar los Términos. Dos pruebas unitarias más comprueban que, en modo `LIVE`, PayPal y Stripe se desactivan si cobrarían en una moneda distinta del peso.
+Las veintitrés pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa, CORS, estado de la base, disponibilidad de la documentación OpenAPI, que el registro exija aceptar los Términos, que solo opine quien recibió el producto, la línea de tiempo y los avisos de pedidos, y la recuperación de contraseña sin revelar qué cuentas existen. Tres pruebas unitarias más comprueban cómo se muestra el nombre del autor de una reseña y que, en modo `LIVE`, PayPal y Stripe se desactivan si cobrarían en una moneda distinta del peso.
 
 Compilación del frontend:
 
@@ -266,6 +278,8 @@ Antes de entregar una versión, ejecuta ambos comandos y prueba manualmente un r
 El perfil `prod` no crea cuentas demo y toma toda la configuración sensible de variables de entorno. Crea primero una base de datos vacía llamada, por ejemplo, `ecommerce`, y un usuario con acceso únicamente a esa base. El primer administrador se puede crear de forma segura durante el arranque mediante variables temporales; el registro público siempre crea clientes y nunca permite elegir un rol.
 
 La configuración de producción usa `ddl-auto=validate`: el backend comprueba el esquema y se detiene si falta una tabla o columna. Antes del primer arranque, ejecuta [database/sqlserver-schema.sql](database/sqlserver-schema.sql) en la base vacía con una cuenta autorizada para crear tablas. Después inicia la aplicación con un usuario limitado a leer y modificar los datos de esa base. Conserva el script bajo control de versiones y añade migraciones numeradas cuando el modelo cambie.
+
+**Si tu base de producción ya existía**, antes de desplegar esta versión ejecuta una sola vez [database/migration-resenas-seguimiento-recuperacion.sql](database/migration-resenas-seguimiento-recuperacion.sql). Añade las tablas de reseñas y de códigos de recuperación y las fechas de cada estado del pedido; no modifica datos. Sin ese paso, el backend no arranca porque `validate` no encuentra las columnas nuevas.
 
 Ejemplo para PowerShell. Sustituye todos los valores de ejemplo:
 

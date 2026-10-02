@@ -3,12 +3,15 @@ package com.codeshift.ecom;
 import com.codeshift.ecom.model.*;
 import com.codeshift.ecom.repository.*;
 import com.codeshift.ecom.service.CartService;
+import com.codeshift.ecom.service.MailService;
 import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.*;
 import org.springframework.http.MediaType;
 import tools.jackson.databind.ObjectMapper;
@@ -16,7 +19,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -43,6 +49,14 @@ class ShopIntegrationTest {
     OrderRepository orders;
     @Autowired
     PasswordEncoder passwords;
+    /*
+     * Sustituye el envío real. Por defecto no puede entregar nada, igual que
+     * una instalación sin Brevo; cada prueba de correo lo activa y lee aquí lo
+     * que se habría enviado.
+     */
+    @MockitoBean
+    MailService mail;
+    String customerEmail;
     String customerToken;
     String adminToken;
     Long productId;
@@ -52,7 +66,8 @@ class ShopIntegrationTest {
     @BeforeEach
     void setup() throws Exception {
         String suffix = UUID.randomUUID().toString();
-        customerToken = signup("customer-" + suffix + "@test.local");
+        customerEmail = "customer-" + suffix + "@test.local";
+        customerToken = signup(customerEmail);
         User admin = new User();
         admin.setEmail("admin-" + suffix + "@test.local");
         admin.setName("Admin");
@@ -97,6 +112,114 @@ class ShopIntegrationTest {
                 Map.of("name", "Cliente", "email", email, "password", "LongPassword123!", "acceptTerms", false))
                 .andExpect(status().isBadRequest());
         assertThat(users.findByEmail(email)).isEmpty();
+    }
+
+    @Test
+    void onlyCustomersWhoReceivedTheProductCanReviewIt() throws Exception {
+        String review = "/api/customer/reviews/" + productId;
+        quantity(customerToken, 1);
+        long orderId = json
+                .readTree(checkout(customerToken, UUID.randomUUID()).andReturn().getResponse().getContentAsString())
+                .get("id").asLong();
+        call("GET", review, customerToken, null).andExpect(jsonPath("$.eligible").value(false));
+        call("PUT", review, customerToken, Map.of("rating", 4, "comment", "Muy útil.")).andExpect(status().isForbidden());
+
+        for (String next : List.of("PROCESSING", "SHIPPED", "DELIVERED"))
+            call("PUT", "/api/admin/orders/" + orderId + "/status", adminToken, Map.of("status", next))
+                    .andExpect(status().isOk());
+        call("GET", review, customerToken, null).andExpect(jsonPath("$.eligible").value(true))
+                .andExpect(jsonPath("$.rating").doesNotExist());
+        call("PUT", review, customerToken, Map.of("rating", 6, "comment", "")).andExpect(status().isBadRequest());
+        call("PUT", review, customerToken, Map.of("rating", 4, "comment", "Muy útil.")).andExpect(status().isOk());
+        // Volver a opinar actualiza la misma reseña en vez de sumar otra.
+        call("PUT", review, customerToken, Map.of("rating", 5, "comment", "Mejor de lo que esperaba."))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.rating").value(5));
+        call("GET", "/api/catalog/products/" + productId + "/reviews", null, null)
+                .andExpect(jsonPath("$.count").value(1)).andExpect(jsonPath("$.average").value(5.0))
+                .andExpect(jsonPath("$.counts[4]").value(1))
+                .andExpect(jsonPath("$.reviews[0].author").value("Cliente"))
+                .andExpect(jsonPath("$.reviews[0].authorEmail").doesNotExist());
+        call("GET", "/api/catalog/products/" + productId, null, null)
+                .andExpect(jsonPath("$.rating").value(5.0)).andExpect(jsonPath("$.reviewCount").value(1));
+        String stranger = signup(UUID.randomUUID() + "@test.local");
+        call("PUT", review, stranger, Map.of("rating", 1, "comment", "Malo.")).andExpect(status().isForbidden());
+
+        var all = json.readTree(call("GET", "/api/admin/reviews", adminToken, null).andReturn().getResponse()
+                .getContentAsString());
+        long reviewId = 0;
+        for (var item : all)
+            if (item.get("productId").asLong() == productId)
+                reviewId = item.get("id").asLong();
+        String visibility = "/api/admin/reviews/" + reviewId + "/visibility";
+        call("PUT", visibility, adminToken, Map.of("hidden", true, "reason", "")).andExpect(status().isBadRequest());
+        call("PUT", visibility, adminToken, Map.of("hidden", true, "reason", "Incluye datos personales."))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.hidden").value(true));
+        call("GET", "/api/catalog/products/" + productId + "/reviews", null, null)
+                .andExpect(jsonPath("$.count").value(0)).andExpect(jsonPath("$.reviews.length()").value(0));
+        call("GET", "/api/catalog/products/" + productId, null, null)
+                .andExpect(jsonPath("$.rating").doesNotExist()).andExpect(jsonPath("$.reviewCount").value(0));
+        call("GET", review, customerToken, null).andExpect(jsonPath("$.hidden").value(true))
+                .andExpect(jsonPath("$.hiddenReason").value("Incluye datos personales."));
+        call("DELETE", review, customerToken, null).andExpect(status().isNoContent());
+        call("GET", review, customerToken, null).andExpect(jsonPath("$.rating").doesNotExist());
+    }
+
+    @Test
+    void orderTimelineRecordsEachStepAndEmailsTheCustomer() throws Exception {
+        when(mail.canDeliver()).thenReturn(true);
+        quantity(customerToken, 1);
+        long orderId = json
+                .readTree(checkout(customerToken, UUID.randomUUID()).andReturn().getResponse().getContentAsString())
+                .get("id").asLong();
+        call("PUT", "/api/admin/orders/" + orderId + "/status", adminToken, Map.of("status", "PROCESSING"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.processingAt").exists())
+                .andExpect(jsonPath("$.shippedAt").doesNotExist());
+        call("GET", "/api/customer/orders", customerToken, null).andExpect(jsonPath("$[0].processingAt").exists());
+
+        verify(mail, timeout(5000)).send(eq(customerEmail), eq("Cliente"), eq("Recibimos tu pedido #" + orderId),
+                anyString());
+        verify(mail, timeout(5000)).send(eq(customerEmail), eq("Cliente"),
+                eq("Estamos preparando tu pedido #" + orderId), anyString());
+    }
+
+    @Test
+    void passwordCanBeResetWithTheEmailedCode() throws Exception {
+        when(mail.canDeliver()).thenReturn(true);
+        call("POST", "/api/auth/password-reset", null, Map.of("email", customerEmail))
+                .andExpect(status().isNoContent());
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        verify(mail).send(eq(customerEmail), anyString(), eq("Código para cambiar tu contraseña"), body.capture());
+        var match = Pattern.compile(">(\\d{6})<").matcher(body.getValue());
+        assertThat(match.find()).isTrue();
+        String code = match.group(1);
+        String wrong = code.equals("000000") ? "111111" : "000000";
+
+        String confirm = "/api/auth/password-reset/confirm";
+        call("POST", confirm, null, Map.of("email", customerEmail, "code", wrong, "newPassword", "NuevaClave2026!"))
+                .andExpect(status().isBadRequest());
+        call("POST", confirm, null, Map.of("email", customerEmail, "code", code, "newPassword", "NuevaClave2026!"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.token").exists());
+        // El código ya se usó: no sirve dos veces.
+        call("POST", confirm, null, Map.of("email", customerEmail, "code", code, "newPassword", "OtraClave2026!"))
+                .andExpect(status().isBadRequest());
+        call("POST", "/api/auth/login", null, Map.of("email", customerEmail, "password", "LongPassword123!"))
+                .andExpect(status().isUnauthorized());
+        call("POST", "/api/auth/login", null, Map.of("email", customerEmail, "password", "NuevaClave2026!"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void passwordResetDoesNotRevealWhichAccountsExist() throws Exception {
+        call("POST", "/api/auth/password-reset", null, Map.of("email", customerEmail))
+                .andExpect(status().isServiceUnavailable());
+        when(mail.canDeliver()).thenReturn(true);
+        call("POST", "/api/auth/password-reset", null, Map.of("email", "nadie-" + UUID.randomUUID() + "@test.local"))
+                .andExpect(status().isNoContent());
+        call("POST", "/api/auth/password-reset/confirm", null, Map.of("email",
+                "nadie-" + UUID.randomUUID() + "@test.local", "code", "123456", "newPassword", "NuevaClave2026!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("No hay ningún código pendiente para ese correo. Pide uno nuevo."));
+        verify(mail, never()).send(anyString(), anyString(), eq("Código para cambiar tu contraseña"), anyString());
     }
 
     @Test
