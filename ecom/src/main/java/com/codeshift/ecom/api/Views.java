@@ -4,6 +4,8 @@ import com.codeshift.ecom.model.*;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /** Responses never expose persistence entities or password hashes. */
 public final class Views {
@@ -32,22 +34,87 @@ public final class Views {
         }
     }
 
+    /**
+     * {@code rating} y {@code reviewCount} solo vienen rellenos en el catálogo
+     * y en la ficha del producto; en el carrito y en favoritos van vacíos.
+     */
     public record ProductView(Long id, String name, String description, BigDecimal price, BigDecimal cost, int stock,
             boolean active,
-            Long categoryId, String categoryName, String imageUrl, long version) {
+            Long categoryId, String categoryName, String imageUrl, long version, Double rating,
+            long reviewCount) {
         public static ProductView of(Product p) {
             return new ProductView(p.getId(), p.getName(), p.getDescription(), p.getPrice(), null, p.getStock(),
                     p.isActive(),
                     p.getCategory().getId(), p.getCategory().getName(), p.getImageType() == null ? null
                             : "/api/catalog/products/" + p.getId() + "/image?v=" + p.getVersion(),
-                    p.getVersion());
+                    p.getVersion(), null, 0);
         }
 
         public static ProductView ofAdmin(Product p) {
             ProductView publicView = of(p);
             return new ProductView(publicView.id, publicView.name, publicView.description, publicView.price,
                     p.getCost() == null ? BigDecimal.ZERO : p.getCost(), publicView.stock, publicView.active,
-                    publicView.categoryId, publicView.categoryName, publicView.imageUrl, publicView.version);
+                    publicView.categoryId, publicView.categoryName, publicView.imageUrl, publicView.version,
+                    null, 0);
+        }
+
+        public ProductView withRating(Double average, long count) {
+            return new ProductView(id, name, description, price, cost, stock, active, categoryId, categoryName,
+                    imageUrl, version, count == 0 ? null : average, count);
+        }
+    }
+
+    /** Reseña tal como se publica: con el nombre y la inicial del apellido, nunca el correo. */
+    public record ReviewView(Long id, String author, int rating, String comment, Instant createdAt,
+            Instant updatedAt) {
+        public static ReviewView of(ProductReview r) {
+            return new ReviewView(r.getId(), publicName(r.getAuthor().getName()), r.getRating(), r.getComment(),
+                    r.getCreatedAt(), r.getUpdatedAt());
+        }
+
+        /**
+         * Nombre y una inicial: "Ana Pérez" se publica como "Ana P." y "Luis de
+         * la Cruz" como "Luis C.", saltando las partículas.
+         */
+        static String publicName(String fullName) {
+            String[] parts = fullName.trim().split("\\s+");
+            for (int i = 1; i < parts.length; i++) {
+                if (NAME_PARTICLES.contains(parts[i].toLowerCase(Locale.ROOT)))
+                    continue;
+                String initial = parts[i].substring(0, parts[i].offsetByCodePoints(0, 1));
+                return parts[0] + " " + initial.toUpperCase(Locale.ROOT) + ".";
+            }
+            return parts[0];
+        }
+
+        private static final Set<String> NAME_PARTICLES = Set.of("de", "del", "la", "las", "los", "y", "da",
+                "das", "do", "dos", "di", "van", "von", "der");
+    }
+
+    /**
+     * Resumen público de las reseñas de un producto. {@code counts[i]} es el
+     * número de reseñas con {@code i + 1} estrellas.
+     */
+    public record ReviewSummary(Double average, long count, List<Long> counts, List<ReviewView> reviews) {
+    }
+
+    /** Lo que el cliente necesita para opinar: si puede y, si ya opinó, su reseña. */
+    public record MyReview(boolean eligible, Integer rating, String comment, boolean hidden, String hiddenReason,
+            Instant updatedAt) {
+        public static MyReview of(boolean eligible, ProductReview r) {
+            return r == null ? new MyReview(eligible, null, null, false, null, null)
+                    : new MyReview(eligible, r.getRating(), r.getComment(), r.isHidden(), r.getHiddenReason(),
+                            r.getUpdatedAt());
+        }
+    }
+
+    public record AdminReviewView(Long id, Long productId, String productName, String authorName,
+            String authorEmail, int rating, String comment, boolean hidden, String hiddenReason,
+            Instant createdAt) {
+        public static AdminReviewView of(ProductReview r) {
+            return new AdminReviewView(r.getId(), r.getProduct().getId(), r.getProduct().getName(),
+                    r.getAuthor().getName(), r.getAuthor().getEmail(), r.getRating(), r.getComment(),
+                    r.isHidden(), r.getHiddenReason(), r.getCreatedAt());
         }
     }
 
@@ -72,7 +139,8 @@ public final class Views {
 
     public record OrderView(Long id, String customerName, Instant createdAt, String address, String phone,
             ShopOrder.Status status, String paymentStatus, BigDecimal subtotal, BigDecimal discount,
-            BigDecimal total, String couponCode, List<OrderLineView> lines) {
+            BigDecimal total, String couponCode, List<OrderLineView> lines, Instant processingAt,
+            Instant shippedAt, Instant deliveredAt, Instant cancelledAt) {
         public static OrderView of(ShopOrder o) {
             return new OrderView(o.getId(), o.getCustomerName(), o.getCreatedAt(), o.getAddress(), o.getPhone(),
                     o.getStatus(),
@@ -80,7 +148,8 @@ public final class Views {
                     o.getLines().stream()
                             .map(l -> new OrderLineView(l.getProductId(), l.getProductName(), l.getUnitPrice(),
                                     l.getQuantity()))
-                            .toList());
+                            .toList(),
+                    o.getProcessingAt(), o.getShippedAt(), o.getDeliveredAt(), o.getCancelledAt());
         }
     }
 

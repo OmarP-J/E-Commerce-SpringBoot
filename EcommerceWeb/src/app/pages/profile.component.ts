@@ -5,9 +5,10 @@ import { BUSINESS } from "../core/business";
 import { roleLabels, User } from "../core/models";
 import { Page } from "../core/page";
 import { BusinessValueComponent } from "./legal/legal-shared";
+import { PasswordToggleComponent } from "../core/password-toggle.component";
 
 @Component({
-  imports: [FormsModule, RouterLink, BusinessValueComponent],
+  imports: [FormsModule, RouterLink, BusinessValueComponent, PasswordToggleComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -66,40 +67,52 @@ import { BusinessValueComponent } from "./legal/legal-shared";
             #passwordForm="ngForm"
             (ngSubmit)="changePassword()"
           >
-            <label
-              >Contraseña actual
-              <input
-                type="password"
-                name="currentPassword"
-                [(ngModel)]="currentPassword"
-                required
-                maxlength="72"
-                autocomplete="current-password"
-              />
-            </label>
-            <label
-              >Nueva contraseña
-              <input
-                type="password"
-                name="newPassword"
-                [(ngModel)]="newPassword"
-                required
-                minlength="10"
-                maxlength="72"
-                autocomplete="new-password"
-              />
-            </label>
-            <label
-              >Repetir nueva contraseña
-              <input
-                type="password"
-                name="confirmation"
-                [(ngModel)]="confirmation"
-                required
-                maxlength="72"
-                autocomplete="new-password"
-              />
-            </label>
+            <div class="field">
+              <label for="current-password">Contraseña actual</label>
+              <span class="password-field"
+                ><input
+                  #currentInput
+                  id="current-password"
+                  type="password"
+                  name="currentPassword"
+                  [(ngModel)]="currentPassword"
+                  required
+                  maxlength="72"
+                  autocomplete="current-password"
+                /><app-password-toggle [input]="currentInput"
+              /></span>
+            </div>
+            <div class="field">
+              <label for="new-password">Nueva contraseña</label>
+              <span class="password-field"
+                ><input
+                  #newInput
+                  id="new-password"
+                  type="password"
+                  name="newPassword"
+                  [(ngModel)]="newPassword"
+                  required
+                  minlength="10"
+                  maxlength="72"
+                  autocomplete="new-password"
+                /><app-password-toggle [input]="newInput"
+              /></span>
+            </div>
+            <div class="field">
+              <label for="confirm-password">Repetir nueva contraseña</label>
+              <span class="password-field"
+                ><input
+                  #confirmInput
+                  id="confirm-password"
+                  type="password"
+                  name="confirmation"
+                  [(ngModel)]="confirmation"
+                  required
+                  maxlength="72"
+                  autocomplete="new-password"
+                /><app-password-toggle [input]="confirmInput"
+              /></span>
+            </div>
             <small
               >Usa entre 10 y 72 caracteres y evita reutilizar una contraseña de
               otra cuenta.</small

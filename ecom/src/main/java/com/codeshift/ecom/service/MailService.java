@@ -49,6 +49,11 @@ public class MailService {
         return config.isConfigured();
     }
 
+    /** Hay forma de que el mensaje llegue: por Brevo o, en desarrollo, al log. */
+    public boolean canDeliver() {
+        return config.isConfigured() || config.isDevLogDelivery();
+    }
+
     public void send(String toEmail, String toName, String subject, String htmlBody) {
         if (!config.isConfigured()) {
             log.warn("""

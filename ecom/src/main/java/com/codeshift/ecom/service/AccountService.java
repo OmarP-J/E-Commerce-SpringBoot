@@ -22,6 +22,7 @@ public class AccountService {
     private final TokenService tokens;
     private final EmailAddressValidator emailAddresses;
     private final EmailVerificationService verification;
+    private final PasswordResetService passwordResets;
 
     public Views.SignupResult signup(Requests.Signup input) {
         validatePasswordBytes(input.password());
@@ -76,6 +77,33 @@ public class AccountService {
         if (user == null || user.isEmailVerified())
             return;
         verification.resend(user);
+    }
+
+    /**
+     * Responde igual exista o no la cuenta. Solo avisa cuando el servicio no
+     * puede enviar correos, porque eso no revela nada sobre las cuentas.
+     */
+    public void requestPasswordReset(Requests.PasswordResetRequest input) {
+        if (!passwordResets.isAvailable())
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "La recuperación de contraseña no está disponible ahora. Escribe a soporte.");
+        users.findByEmail(normalizeEmail(input.email())).ifPresent(passwordResets::start);
+    }
+
+    /**
+     * Cambia la contraseña y deja la sesión iniciada. Quien recibe el código
+     * en su buzón demuestra que el correo es suyo, así que la cuenta queda
+     * también verificada.
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public Views.Auth resetPassword(Requests.PasswordResetConfirm input) {
+        validatePasswordBytes(input.newPassword());
+        User user = users.findByEmail(normalizeEmail(input.email()))
+                .orElseThrow(() -> ApiException.badRequest(PasswordResetService.NO_PENDING_CODE));
+        passwordResets.confirm(user, input.code());
+        user.setPasswordHash(passwords.encode(input.newPassword()));
+        user.setEmailVerified(true);
+        return new Views.Auth(tokens.create(user.getEmail()), Views.UserView.of(user));
     }
 
     public Views.Auth login(Requests.Login input) {

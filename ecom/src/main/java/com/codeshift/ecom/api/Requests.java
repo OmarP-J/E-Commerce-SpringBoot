@@ -70,6 +70,25 @@ public final class Requests {
     public record ResendCode(@NotBlank @Email @Size(max = 254) String email) {
     }
 
+    public record PasswordResetRequest(@NotBlank @Email @Size(max = 254) String email) {
+    }
+
+    public record PasswordResetConfirm(@NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Pattern(regexp = "\\d{6}", message = "El código son 6 dígitos") String code,
+            @NotBlank @Size(min = 10, max = 72) String newPassword) {
+    }
+
+    public record ReviewInput(@Min(1) @Max(5) int rating, @Size(max = 1000) String comment) {
+    }
+
+    /** Ocultar exige un motivo: queda registrado por qué se retiró una opinión. */
+    public record ReviewVisibility(boolean hidden, @Size(max = 300) String reason) {
+        @AssertTrue(message = "Indica el motivo para ocultar la reseña (mínimo 5 caracteres).")
+        public boolean isReasonGivenWhenHiding() {
+            return !hidden || (reason != null && reason.trim().length() >= 5);
+        }
+    }
+
     /**
      * {@code provider} vacío significa pago simulado, para no romper a los
      * clientes que ya existían. {@code paymentReference} es el id de la orden

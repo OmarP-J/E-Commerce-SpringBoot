@@ -1,7 +1,7 @@
 import { CurrencyPipe } from "@angular/common";
 import { Component, OnInit, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ActivatedRoute, RouterLink, RouterLinkActive } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import {
   Analytics,
   Category,
@@ -14,6 +14,8 @@ import {
   UserRole,
 } from "../core/models";
 import { Page } from "../core/page";
+import { AdminNavComponent } from "./admin-nav.component";
+import { IconComponent } from "../core/icon.component";
 
 interface ProductDraft {
   id: number | null;
@@ -42,7 +44,7 @@ interface CouponDraft {
 }
 
 @Component({
-  imports: [CurrencyPipe, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CurrencyPipe, FormsModule, RouterLink, AdminNavComponent, IconComponent],
   template: `
     <div class="section-heading admin-heading">
       <div>
@@ -60,22 +62,7 @@ interface CouponDraft {
       </button>
     </div>
 
-    <nav class="admin-subnav" aria-label="Secciones de administración">
-      <a
-        routerLink="/admin"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Resumen</a
-      >
-      <a routerLink="/admin/products" routerLinkActive="active">Productos</a>
-      <a routerLink="/admin/categories" routerLinkActive="active">Categorías</a>
-      <a routerLink="/admin/coupons" routerLinkActive="active">Cupones</a>
-      <a routerLink="/admin/orders" routerLinkActive="active">Pedidos</a>
-      <a routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
-      <a routerLink="/admin/settings" routerLinkActive="active"
-        >Configuración</a
-      >
-    </nav>
+    <app-admin-nav />
 
     @if (section === "dashboard" && analytics; as data) {
       <section class="metrics" aria-label="Resumen de la tienda">
@@ -113,52 +100,52 @@ interface CouponDraft {
       </section>
       <section class="admin-shortcuts" aria-label="Accesos rápidos">
         <a routerLink="/admin/products"
-          ><span aria-hidden="true">01</span>
+          ><span aria-hidden="true"><app-icon name="catalog" /></span>
           <div>
             <strong>Gestionar productos</strong
             ><small>Precios, existencias e imágenes</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
         <a routerLink="/admin/categories"
-          ><span aria-hidden="true">02</span>
+          ><span aria-hidden="true"><app-icon name="tag" /></span>
           <div>
             <strong>Organizar categorías</strong
             ><small>Agrupa el catálogo con claridad</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
         <a routerLink="/admin/coupons"
-          ><span aria-hidden="true">03</span>
+          ><span aria-hidden="true"><app-icon name="percent" /></span>
           <div>
             <strong>Preparar cupones</strong
             ><small>Promociones y fechas de vigencia</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
         <a routerLink="/admin/orders"
-          ><span aria-hidden="true">04</span>
+          ><span aria-hidden="true"><app-icon name="orders" /></span>
           <div>
             <strong>Revisar pedidos</strong
             ><small>Consulta y actualiza su estado</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
         <a routerLink="/admin/users"
-          ><span aria-hidden="true">05</span>
+          ><span aria-hidden="true"><app-icon name="users" /></span>
           <div>
             <strong>Asignar permisos</strong
             ><small>Roles para el equipo y los clientes</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
         <a routerLink="/admin/settings"
-          ><span aria-hidden="true">06</span>
+          ><span aria-hidden="true"><app-icon name="admin" /></span>
           <div>
             <strong>Configurar la tienda</strong
             ><small>Nombre, soporte y alerta de inventario</small>
           </div>
-          <b aria-hidden="true">→</b></a
+          <b aria-hidden="true"><app-icon name="arrow-right" /></b></a
         >
       </section>
     }

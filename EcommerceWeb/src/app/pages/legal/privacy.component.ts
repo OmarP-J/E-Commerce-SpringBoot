@@ -62,8 +62,18 @@ import {
                 <th scope="row">Nombre y correo electrónico</th>
                 <td>Al crear tu cuenta</td>
                 <td>
-                  Identificar tu cuenta, iniciar sesión y enviarte el código que
-                  confirma que el correo es tuyo.
+                  Identificar tu cuenta, iniciar sesión, enviarte el código que
+                  confirma que el correo es tuyo y avisarte por correo cuando tu
+                  pedido se confirma o cambia de estado. Son avisos del
+                  servicio, no publicidad.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Código para recuperar la contraseña</th>
+                <td>Si pides cambiar una contraseña olvidada</td>
+                <td>
+                  Comprobar que el correo es tuyo. Se guarda cifrado, vence a
+                  los 15 minutos y se borra al usarlo.
                 </td>
               </tr>
               <tr>
@@ -97,6 +107,14 @@ import {
                 <th scope="row">Mensajes de tus solicitudes de ayuda</th>
                 <td>Al pedir una devolución, cambio, reembolso o reclamo</td>
                 <td>Revisar y responder tu solicitud.</td>
+              </tr>
+              <tr>
+                <th scope="row">Valoración y comentario de tus reseñas</th>
+                <td>Al opinar sobre un producto que recibiste</td>
+                <td>
+                  Publicarla junto al producto con tu nombre y la inicial de tu
+                  apellido. Tu correo nunca se publica.
+                </td>
               </tr>
               <tr>
                 <th scope="row">
@@ -151,8 +169,13 @@ import {
             sus datos de entrega y tus solicitudes de ayuda.
           </li>
           <li>
-            <strong>Administración</strong> ve lo mismo que Soporte y además la
-            lista de cuentas para asignar permisos.
+            <strong>Administración</strong> ve lo mismo que Soporte, la lista
+            de cuentas para asignar permisos y, para moderarlas, el nombre y el
+            correo de quien escribió cada reseña.
+          </li>
+          <li>
+            <strong>Cualquier visitante</strong> ve tus reseñas publicadas, con
+            tu nombre y la inicial de tu apellido.
           </li>
           <li>
             <strong>Inventario</strong> ve las existencias de productos. En el
@@ -193,13 +216,16 @@ import {
         <h2 id="privacy-retention">6. Cuánto tiempo los guardamos</h2>
         <ul>
           <li>
-            <strong>Cuenta, direcciones, favoritos, pedidos y solicitudes</strong>:
-            mientras tu cuenta exista. Si pides eliminarla, los borramos o los
-            anonimizamos, salvo lo que una ley nos obligue a conservar.
+            <strong
+              >Cuenta, direcciones, favoritos, pedidos, solicitudes y
+              reseñas</strong
+            >: mientras tu cuenta exista o hasta que borres la reseña. Si pides
+            eliminar la cuenta, los borramos o los anonimizamos, salvo lo que
+            una ley nos obligue a conservar.
           </li>
           <li>
-            <strong>Código de verificación</strong>: vence a los 15 minutos y se
-            borra en cuanto confirmas tu correo.
+            <strong>Códigos de verificación y de recuperación</strong>: vencen
+            a los 15 minutos y se borran en cuanto se usan.
           </li>
           <li>
             <strong>Sesión</strong>: dura una hora. Tu navegador la guarda solo
@@ -224,9 +250,10 @@ import {
         </ul>
         <p>
           Puedes cambiar tu nombre en
-          <a routerLink="/profile">Mi cuenta</a> y editar o borrar tus
-          direcciones en <a routerLink="/addresses">Mis direcciones</a>. Para
-          todo lo demás, escribe a
+          <a routerLink="/profile">Mi cuenta</a>, editar o borrar tus
+          direcciones en <a routerLink="/addresses">Mis direcciones</a> y
+          editar o borrar tus reseñas en la página de cada producto. Para todo
+          lo demás, escribe a
           @if (business.email) {
             <a [href]="'mailto:' + business.email">{{ business.email }}</a>
           } @else {

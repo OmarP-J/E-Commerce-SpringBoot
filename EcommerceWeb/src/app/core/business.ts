@@ -32,7 +32,10 @@ export const DATA_PROCESSORS: { name: string; purpose: string }[] = [
   { name: "Vercel Inc.", purpose: "Aloja la página web y reenvía las solicitudes al servidor." },
   { name: "Render Services, Inc.", purpose: "Aloja el servidor de la aplicación." },
   { name: "Microsoft (Azure SQL Database)", purpose: "Almacena la base de datos." },
-  { name: "Brevo (Sendinblue SAS)", purpose: "Envía el correo con el código de verificación de la cuenta." },
+  {
+    name: "Brevo (Sendinblue SAS)",
+    purpose: "Envía los correos del servicio: códigos de verificación y de recuperación, y avisos de tus pedidos.",
+  },
   { name: "PayPal", purpose: "Procesa el pago solo si eliges PayPal (hoy en modo de prueba)." },
   { name: "Stripe", purpose: "Procesa el pago solo si eliges tarjeta (hoy en modo de prueba)." },
 ];

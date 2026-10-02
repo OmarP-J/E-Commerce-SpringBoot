@@ -8,9 +8,10 @@ import {
   SupportCaseType,
 } from "../core/models";
 import { Page } from "../core/page";
+import { IconComponent } from "../core/icon.component";
 
 @Component({
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, IconComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -122,6 +123,7 @@ import { Page } from "../core/page";
         } @empty {
           @if (!busy) {
             <section class="empty panel">
+              <span class="empty-icon" aria-hidden="true"><app-icon name="help" /></span>
               <h2>{{ search.trim() ? "No hay solicitudes para este filtro." : "Aún no has enviado solicitudes." }}</h2>
               <p>{{ search.trim() ? "Prueba con otros términos de búsqueda." : "Cuando necesites ayuda podrás seguir la respuesta aquí." }}</p>
             </section>

@@ -94,6 +94,8 @@ import {
           <li>
             Un pedido pasa por estos estados: confirmado, en preparación,
             enviado y entregado. Puede cancelarse mientras no se haya enviado.
+            Te avisamos por correo de cada cambio y puedes seguirlo en
+            <a routerLink="/orders">Mis pedidos</a>.
           </li>
         </ul>
         <p>
@@ -102,8 +104,37 @@ import {
         </p>
       </section>
 
+      <section aria-labelledby="terms-reviews">
+        <h2 id="terms-reviews">5. Reseñas</h2>
+        <ul>
+          <li>
+            Solo puede opinar quien tiene un pedido entregado con ese
+            producto. Cada cliente deja una opinión por producto y puede
+            editarla o borrarla cuando quiera.
+          </li>
+          <li>
+            Se publica con tu nombre y la inicial de tu apellido. No incluyas
+            datos personales tuyos ni de otras personas.
+          </li>
+          <li>
+            La tienda no escribe reseñas, no las paga y no da descuentos ni
+            regalos a cambio de opinar.
+          </li>
+          <li>
+            Solo ocultamos las reseñas que incumplen estas normas: insultos,
+            datos personales, publicidad o contenido sin relación con el
+            producto. <strong>Nunca ocultamos una opinión por ser negativa.</strong>
+            Si ocultamos la tuya, verás el motivo en la página del producto.
+          </li>
+          <li>
+            Al publicarla nos permites mostrarla en el sitio mientras no la
+            borres.
+          </li>
+        </ul>
+      </section>
+
       <section aria-labelledby="terms-use">
-        <h2 id="terms-use">5. Uso aceptable</h2>
+        <h2 id="terms-use">6. Uso aceptable</h2>
         <p>No está permitido:</p>
         <ul>
           <li>
@@ -123,7 +154,7 @@ import {
       </section>
 
       <section aria-labelledby="terms-ip">
-        <h2 id="terms-ip">6. Propiedad intelectual</h2>
+        <h2 id="terms-ip">7. Propiedad intelectual</h2>
         <p>
           Los textos, el diseño y el código del sitio pertenecen a su
           responsable. No puedes copiarlos para usarlos con fines comerciales
@@ -133,7 +164,7 @@ import {
       </section>
 
       <section aria-labelledby="terms-liability">
-        <h2 id="terms-liability">7. Responsabilidad</h2>
+        <h2 id="terms-liability">8. Responsabilidad</h2>
         <p>
           Al tratarse de una demostración, el sitio puede cambiar, dejar de
           estar disponible o reiniciar sus datos de prueba. Hacemos lo posible
@@ -148,7 +179,7 @@ import {
       </section>
 
       <section aria-labelledby="terms-law">
-        <h2 id="terms-law">8. Ley aplicable</h2>
+        <h2 id="terms-law">9. Ley aplicable</h2>
         <p>
           Estos términos se rigen por las leyes de la República Dominicana. Las
           aceptaciones y comunicaciones electrónicas tienen validez conforme a
@@ -160,7 +191,7 @@ import {
       </section>
 
       <section aria-labelledby="terms-changes">
-        <h2 id="terms-changes">9. Cambios y contacto</h2>
+        <h2 id="terms-changes">10. Cambios y contacto</h2>
         <p>
           Si cambiamos estos términos, actualizaremos la fecha de arriba y lo
           avisaremos en el sitio. Para cualquier duda escribe a

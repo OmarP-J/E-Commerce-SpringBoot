@@ -18,7 +18,7 @@ import { Page } from "../core/page";
         </p>
         <div class="hero-actions">
           <a class="button button-light" routerLink="/catalog"
-            >Explorar productos <span aria-hidden="true">→</span></a
+            >Explorar productos <app-icon name="arrow-right" /></a
           >
           <a
             class="quiet-link"
@@ -30,9 +30,11 @@ import { Page } from "../core/page";
         </div>
         <div class="hero-proof">
           <span
-            ><b>Compra clara</b><small>Totales antes de confirmar</small></span
+            ><app-icon name="receipt" /><b>Compra clara</b
+            ><small>Totales antes de confirmar</small></span
           ><span
-            ><b>Tu selección</b><small>Favoritos y carrito privado</small></span
+            ><app-icon name="heart" /><b>Tu selección</b
+            ><small>Favoritos y carrito privado</small></span
           >
         </div>
       </div>
@@ -88,7 +90,7 @@ import { Page } from "../core/page";
                y el perfil social de otra tienda y el nombre de una clienta
                inventada. No se puede usar marca ajena: la sustituye un icono. -->
           <div class="experience-media experience-illustration">
-            <app-icon name="package" />
+            <app-icon name="receipt" />
             <span class="experience-step" aria-hidden="true">03</span>
           </div>
           <div class="experience-content">
@@ -109,7 +111,7 @@ import { Page } from "../core/page";
           <h2>Empieza por aquí</h2>
         </div>
         <a routerLink="/catalog"
-          >Ver todo el catálogo <span aria-hidden="true">→</span></a
+          >Ver todo el catálogo <app-icon name="arrow-right" /></a
         >
       </div>
       <div class="mini-product-grid">
@@ -129,7 +131,7 @@ import { Page } from "../core/page";
               ><b>{{
                 product.price | currency: "DOP" : "symbol"
               }}</b></span
-            ><i aria-hidden="true">↗</i>
+            ><i aria-hidden="true"><app-icon name="arrow-up-right" /></i>
           </a>
         }
       </div>
@@ -156,11 +158,11 @@ import { Page } from "../core/page";
       <div class="hero-actions">
         @if (session.user(); as user) {
           <a class="button button-light" [routerLink]="roleHome(user.role)"
-            >Abrir mi espacio <span aria-hidden="true">→</span></a
+            >Abrir mi espacio <app-icon name="arrow-right" /></a
           >
         } @else {
           <a class="button button-light" routerLink="/login"
-            >Iniciar sesión <span aria-hidden="true">→</span></a
+            >Iniciar sesión <app-icon name="arrow-right" /></a
           ><a class="quiet-link" routerLink="/signup">Crear una cuenta</a>
         }
       </div>

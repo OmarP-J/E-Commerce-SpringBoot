@@ -184,7 +184,34 @@ fundamental (sin cookies no esenciales, fuentes locales, finalidades claras).
 - Falta una prueba manual con lector de pantalla (NVDA o VoiceOver): axe-core
   detecta cerca de la mitad de los problemas posibles.
 
-## 8. Cómo comprobarlo
+## 8. Funciones añadidas después de la revisión
+
+Reseñas, seguimiento de pedidos y recuperación de contraseña se diseñaron
+para no reabrir ningún riesgo de los anteriores:
+
+- **Reseñas verificadas.** Solo opina quien tiene un pedido entregado del
+  producto, una vez por producto. No hay reseñas de ejemplo ni forma de que
+  la tienda las escriba. Publicar reseñas falsas o esconder las negativas se
+  considera publicidad engañosa (Ley 358-05) y está sancionado de forma
+  expresa en Estados Unidos y en la Unión Europea. Por eso ocultar una reseña
+  exige un motivo, el cliente lo ve, y los Términos prometen no ocultar
+  opiniones por ser negativas: **cumple esa promesa al moderar**. Se publica
+  solo el nombre y la inicial del apellido; el correo nunca.
+- **Avisos de pedidos por correo.** Son correos del servicio sobre una compra
+  que el cliente hizo, así que no necesitan consentimiento aparte. Si algún día
+  envías promociones o boletines, eso sí exige consentimiento expreso y un
+  enlace para darse de baja.
+- **Recuperar la contraseña.** Responde igual exista o no la cuenta, para no
+  revelar qué correos están registrados. Las sesiones abiertas antes del
+  cambio siguen valiendo hasta que caducan (máximo una hora), porque las
+  sesiones no se guardan en el servidor.
+- **Migración obligatoria.** En una base de producción existente hay que
+  ejecutar `database/migration-resenas-seguimiento-recuperacion.sql` antes de
+  desplegar; si no, el backend no arranca.
+
+La Política de privacidad y los Términos ya describen estas tres funciones.
+
+## 9. Cómo comprobarlo
 
 ```powershell
 cd ecom

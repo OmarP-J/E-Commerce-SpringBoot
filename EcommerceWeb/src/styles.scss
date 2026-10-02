@@ -20,6 +20,8 @@
   --line: #d9e0da;
   /* Borde de campos de formulario: 3.3:1 sobre blanco. */
   --field-border: #85918a;
+  /* Estrellas de valoración: ámbar oscuro, 5:1 sobre blanco. */
+  --star: #b45309;
   --danger: #a22d35;
   --shadow: 0 18px 54px rgba(21, 61, 42, 0.1);
   --shadow-soft: 0 10px 30px rgba(21, 61, 42, 0.07);
@@ -275,22 +277,77 @@ small {
   display: block;
   flex: none;
 }
-/* En la barra manda el icono; el nombre lo da el aria-label de cada enlace.
-   En el cajón de móvil el texto vuelve, porque ahí sobra espacio y un icono
-   suelto no le dice nada a nadie. */
+/* En la barra manda el icono; el nombre lo da el aria-label de cada enlace y
+   aparece como etiqueta al pasar el ratón o al llegar con el teclado. En el
+   cajón de móvil el texto vuelve, porque ahí sobra espacio. */
 @media (min-width: 901px) {
-  .site-header nav .nav-label {
-    display: none;
+  .site-header nav {
+    gap: clamp(0.3rem, 0.9vw, 0.7rem);
   }
   .site-header nav a:not(.button),
   .site-header nav .logout-button {
-    padding: 0.55rem 0.35rem;
+    position: relative;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 12px;
   }
-  .site-header nav {
-    gap: clamp(0.5rem, 1.4vw, 1.1rem);
+  .site-header nav a.nav-pill {
+    padding: 0 !important;
+    border-radius: 12px;
+  }
+  .site-header nav .icon {
+    width: 21px;
+    height: 21px;
   }
   .site-header nav a:not(.button)::after {
-    bottom: 0.1rem;
+    display: none;
+  }
+  .site-header nav a:not(.button):hover,
+  .site-header nav .logout-button:hover {
+    color: var(--green-dark);
+    background: var(--soft-green);
+  }
+  /* La página en la que estás resalta: fondo verde e icono blanco. */
+  .site-header nav a.selected,
+  .site-header nav a.nav-pill.selected {
+    color: white !important;
+    background: var(--green);
+  }
+  .site-header nav a.selected:hover {
+    background: var(--green-dark);
+  }
+  .site-header nav .nav-label {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 8px);
+    left: 50%;
+    padding: 0.32rem 0.6rem;
+    border-radius: 8px;
+    color: white;
+    background: var(--ink);
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -4px);
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      visibility 0s linear 0.15s;
+  }
+  .site-header nav a:hover .nav-label,
+  .site-header nav a:focus-visible .nav-label,
+  .site-header nav .logout-button:hover .nav-label,
+  .site-header nav .logout-button:focus-visible .nav-label {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition-delay: 0s;
   }
 }
 .site-header nav a:not(.button)::after {
@@ -527,6 +584,347 @@ main {
   }
 }
 
+/* Valoraciones con estrellas */
+.stars {
+  position: relative;
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+.stars-empty {
+  color: #c3ccc6;
+}
+.stars-full {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  color: var(--star);
+}
+.card-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.detail-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.4rem 0 0.6rem;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.detail-rating .stars {
+  font-size: 1.15rem;
+}
+.detail-rating:hover span:last-child {
+  text-decoration: underline;
+}
+.reviews {
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
+  scroll-margin-top: 110px;
+}
+.reviews-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.reviews-head .muted {
+  max-width: 420px;
+  margin: 0;
+}
+.reviews-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.reviews-summary {
+  position: sticky;
+  top: 110px;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+.reviews-summary p {
+  margin: 0;
+}
+.reviews-average {
+  font: 800 3.4rem/1 "Manrope";
+}
+.reviews-summary .stars {
+  font-size: 1.3rem;
+}
+.reviews-bars {
+  width: 100%;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+.reviews-bars li {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr 2rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+.reviews-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--soft-green);
+  overflow: hidden;
+}
+.reviews-bar span {
+  display: block;
+  height: 100%;
+  background: var(--star);
+}
+.reviews-empty-title {
+  font-weight: 700;
+}
+.reviews-cta {
+  margin-top: 0.8rem !important;
+}
+.review-card {
+  padding: 1.2rem 1.4rem;
+}
+.review-card > p {
+  margin: 0.6rem 0 0;
+}
+.review-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.review-form h3 {
+  margin: 0;
+}
+.star-input {
+  display: flex;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.star-input legend {
+  margin-bottom: 0.45rem;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.star-option {
+  display: inline-flex;
+  padding: 0.1rem 0.15rem;
+  border-radius: 8px;
+  color: var(--field-border);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.star-option.on {
+  color: var(--star);
+}
+.star-option:has(input:focus-visible) {
+  outline: 3px solid var(--green-dark);
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .reviews-layout {
+    grid-template-columns: 1fr;
+  }
+  .reviews-summary {
+    position: static;
+  }
+  .reviews-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Línea de tiempo del pedido */
+.order-timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem 0.5rem;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.order-timeline li {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.order-timeline li::before {
+  content: "";
+  position: absolute;
+  top: 0.45rem;
+  left: 0;
+  right: -0.5rem;
+  height: 3px;
+  background: var(--line);
+}
+.order-timeline li:last-child::before {
+  right: 0;
+}
+.order-timeline li.done::before {
+  background: var(--green);
+}
+.order-timeline li.cancelled::before {
+  background: var(--danger);
+}
+.timeline-dot {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--field-border);
+  border-radius: 50%;
+  background: white;
+}
+.order-timeline li.done .timeline-dot {
+  border-color: var(--green);
+  background: var(--green);
+}
+.order-timeline li.current .timeline-dot {
+  box-shadow: 0 0 0 4px rgba(23, 92, 59, 0.2);
+}
+.order-timeline li.cancelled .timeline-dot {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+.timeline-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+.order-timeline li:not(.done) .timeline-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+.order-timeline time {
+  font-size: 0.78rem;
+}
+/* En pantallas estrechas, de arriba abajo: cuatro pasos en fila no caben. */
+@media (max-width: 620px) {
+  .order-timeline {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .order-timeline li {
+    padding: 0 0 0.9rem 1.9rem;
+  }
+  .order-timeline li::before,
+  .order-timeline li:last-child::before {
+    top: 0;
+    bottom: 0;
+    left: 7.5px;
+    right: auto;
+    width: 3px;
+    height: auto;
+  }
+  .order-timeline li:last-child::before {
+    display: none;
+  }
+}
+.line-review-link {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.forgot-link {
+  justify-self: end;
+  margin-top: -0.4rem;
+  font-size: 0.86rem;
+}
+
+/* Iconos en contexto: sustituyen a los símbolos de texto (↗, ♡, ○, +, ✓). */
+.form-icon .icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+}
+button .icon,
+.button .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.reveal-button .icon,
+.favorite-button .icon,
+.notice button .icon {
+  width: 20px;
+  height: 20px;
+}
+.product-arrow .icon,
+.mini-product > i .icon,
+.admin-shortcuts a > b .icon {
+  width: 18px;
+  height: 18px;
+}
+.empty-state > span .icon {
+  width: 28px;
+  height: 28px;
+}
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.8rem;
+  border-radius: 50%;
+  color: var(--green);
+  background: var(--soft-green);
+}
+.empty-icon .icon {
+  width: 26px;
+  height: 26px;
+}
+.hero-proof span,
+.detail-benefits span {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.65rem;
+}
+.hero-proof .icon,
+.detail-benefits .icon {
+  grid-row: span 2;
+  width: 22px;
+  height: 22px;
+  margin-top: 0.1rem;
+}
+.hero-proof .icon {
+  color: var(--lime);
+}
+.detail-benefits .icon {
+  color: var(--green);
+}
+.admin-shortcuts a > span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  color: var(--green);
+  background: var(--soft-green);
+}
+.admin-shortcuts a > span .icon {
+  width: 22px;
+  height: 22px;
+}
+
 .profile-privacy {
   margin-top: 1.5rem;
 }
@@ -558,14 +956,8 @@ main {
   color: var(--green);
   background: linear-gradient(135deg, var(--soft) 0, var(--soft-green) 100%);
 }
-/* El ancho va en el host <app-icon>: el svg interior mide relativo a él. */
-.experience-illustration app-icon {
-  display: block;
+.experience-illustration .icon {
   width: clamp(72px, 28%, 120px);
-}
-.experience-illustration svg {
-  display: block;
-  width: 100%;
   height: auto;
 }
 .notice {
@@ -680,11 +1072,22 @@ textarea {
   margin: 0.5rem 0 1.2rem;
   padding: 0.9rem 1.1rem;
 }
-.filters label:not(.grow) {
-  min-width: 230px;
-}
+/*
+ * Los filtros se reparten solos según el espacio, sin depender del ancho de
+ * la pantalla: el buscador nunca baja de 260px y se queda con casi todo el
+ * sitio libre; si algo no cabe, pasa a la línea siguiente y ocupa todo el
+ * ancho. Antes el buscador se encogía hasta mostrar solo "Nomb".
+ */
 .grow {
-  flex: 1;
+  flex: 999 1 260px;
+  min-width: 0;
+}
+.filters label:not(.grow) {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.filters > button {
+  flex: 1 0 auto;
 }
 .form-row,
 .coupon-row,
@@ -694,8 +1097,14 @@ textarea {
   justify-content: space-between;
   gap: 1rem;
 }
+/* En columnas estrechas (direcciones, productos) los campos pasan uno bajo
+   otro en vez de quedarse en 140px. */
+.form-row {
+  flex-wrap: wrap;
+}
 .form-row > * {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 0;
 }
 .check-row {
   grid-template-columns: auto 1fr;
@@ -996,17 +1405,23 @@ textarea {
   display: block;
 }
 .password-field input {
-  padding-right: 5rem;
+  padding-right: 3.3rem;
 }
+/* Ojo para ver la contraseña: icono dentro del campo, 40px para el dedo. */
 .reveal-button {
   position: absolute;
-  right: 0.3rem;
-  top: 0.3rem;
-  min-height: 36px;
-  padding: 0.4rem 0.7rem;
-  color: var(--green);
+  top: 3px;
+  right: 3px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  color: var(--muted);
   background: transparent;
-  font-size: 0.78rem;
+}
+.reveal-button[aria-pressed="true"] {
+  color: var(--green);
 }
 .reveal-button:hover:not(:disabled) {
   color: var(--green-dark);
@@ -1180,18 +1595,21 @@ textarea {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.8rem;
+  margin: 0;
+  padding: 1.5rem 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.17);
-  padding-top: 1.5rem;
+  list-style: none;
 }
-.auth-benefits span {
+.auth-benefits li {
   display: grid;
   gap: 0.5rem;
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.85rem;
 }
-.auth-benefits b {
+.auth-benefits .icon {
+  width: 26px;
+  height: 26px;
   color: var(--lime);
-  font: 800 1.1rem "Manrope";
 }
 .auth-card {
   align-self: center;
@@ -1265,6 +1683,7 @@ textarea {
   border-radius: 0;
   background: var(--soft);
   overflow: hidden;
+  text-decoration: none;
 }
 .product-image img {
   width: 100%;
@@ -2547,12 +2966,7 @@ th {
   }
   .filters,
   .toolbar {
-    align-items: stretch;
-    flex-direction: column;
     padding: 1rem;
-  }
-  .filters label:not(.grow) {
-    min-width: 0;
   }
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2571,6 +2985,15 @@ th {
   }
   .price-row strong {
     font-size: 1.05rem;
+  }
+  /* En tarjetas de 150px no caben precio y existencias en la misma línea. */
+  .price-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+  .price-row small {
+    text-align: left;
   }
   .actions {
     flex-direction: column;

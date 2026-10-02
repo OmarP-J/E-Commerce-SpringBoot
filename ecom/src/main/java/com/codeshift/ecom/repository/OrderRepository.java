@@ -16,4 +16,13 @@ public interface OrderRepository extends JpaRepository<ShopOrder, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from ShopOrder o where o.id = :id")
     Optional<ShopOrder> lockById(Long id);
+
+    /** Solo quien recibió el producto puede opinar sobre él. */
+    @Query("""
+            select case when count(o) > 0 then true else false end
+            from ShopOrder o join o.lines l
+            where o.user.id = :userId and o.status = com.codeshift.ecom.model.ShopOrder.Status.DELIVERED
+              and l.productId = :productId
+            """)
+    boolean hasDeliveredPurchase(Long userId, Long productId);
 }

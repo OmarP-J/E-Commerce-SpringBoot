@@ -3,9 +3,10 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Page } from "../core/page";
 import { Auth, homeForRole } from "../core/models";
+import { IconComponent } from "../core/icon.component";
 
 @Component({
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconComponent],
   template: ` <section class="auth-layout">
     <div class="auth-story">
       <a routerLink="/catalog" class="back-link">← Volver al catálogo</a>
@@ -17,16 +18,16 @@ import { Auth, homeForRole } from "../core/models";
           tuya.
         </p>
       </div>
-      <div class="auth-benefits">
-        <span><b>01</b> Abre el correo que te enviamos</span
-        ><span><b>02</b> Copia el código de 6 dígitos</span
-        ><span><b>03</b> Escríbelo aquí y listo</span>
-      </div>
+      <ul class="auth-benefits">
+        <li><app-icon name="mail" />Abre el correo que te enviamos</li>
+        <li><app-icon name="key" />Copia el código de 6 dígitos</li>
+        <li><app-icon name="check" />Escríbelo aquí y listo</li>
+      </ul>
     </div>
 
     <form class="auth-card stack" #form="ngForm" (ngSubmit)="submit()">
       <div class="form-heading">
-        <span class="form-icon" aria-hidden="true">✓</span>
+        <span class="form-icon"><app-icon name="mail" /></span>
         <div>
           <small>VERIFICA TU CUENTA</small>
           <h2>Escribe el código</h2>

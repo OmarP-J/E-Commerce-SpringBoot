@@ -29,6 +29,14 @@ public class MailProperties {
     private String brevoApiKey = "";
     private String brevoApiBase = "https://api.brevo.com";
 
+    /**
+     * Solo para desarrollo local: sin Brevo configurado, los avisos de pedidos
+     * y los códigos para recuperar la contraseña se escriben en el log en vez
+     * de enviarse. Así el flujo se prueba entero sin credenciales. Nunca en
+     * producción: el log mostraría códigos y correos.
+     */
+    private boolean devLogDelivery = false;
+
     private final Verification verification = new Verification();
 
     /**

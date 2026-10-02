@@ -1,6 +1,7 @@
 package com.codeshift.ecom.api;
 
 import com.codeshift.ecom.service.CatalogService;
+import com.codeshift.ecom.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
@@ -14,6 +15,12 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class CatalogController {
     private final CatalogService catalog;
+    private final ReviewService reviews;
+
+    @GetMapping("/products/{id}/reviews")
+    public Views.ReviewSummary reviews(@PathVariable Long id) {
+        return reviews.summary(id);
+    }
 
     @GetMapping("/products")
     public Views.PageView<Views.ProductView> products(@RequestParam(defaultValue = "") String q,

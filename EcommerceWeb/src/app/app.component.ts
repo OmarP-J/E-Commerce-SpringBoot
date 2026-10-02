@@ -50,26 +50,20 @@ import { BUSINESS } from "./core/business";
           routerLinkActive="selected"
           [routerLinkActiveOptions]="{ exact: true }"
           (click)="closeMenu()"
-          aria-label="Inicio"
-          title="Inicio"
-          ><app-icon name="home" /><span class="nav-label">Inicio</span></a
+          aria-label="Inicio"          ><app-icon name="home" /><span class="nav-label">Inicio</span></a
         >
         <a
           routerLink="/catalog"
           routerLinkActive="selected"
           (click)="closeMenu()"
-          aria-label="Catálogo"
-          title="Catálogo"
-          ><app-icon name="catalog" /><span class="nav-label">Catálogo</span></a
+          aria-label="Catálogo"          ><app-icon name="catalog" /><span class="nav-label">Catálogo</span></a
         >
         @if (session.user()?.role === "CUSTOMER") {
           <a
             routerLink="/wishlist"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Favoritos"
-            title="Favoritos"
-            ><app-icon name="heart" /><span class="nav-label"
+            aria-label="Favoritos"            ><app-icon name="heart" /><span class="nav-label"
               >Favoritos</span
             ></a
           >
@@ -77,9 +71,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/orders"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Pedidos"
-            title="Pedidos"
-            ><app-icon name="package" /><span class="nav-label"
+            aria-label="Pedidos"            ><app-icon name="package" /><span class="nav-label"
               >Pedidos</span
             ></a
           >
@@ -87,9 +79,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/addresses"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Direcciones"
-            title="Direcciones"
-            ><app-icon name="pin" /><span class="nav-label"
+            aria-label="Direcciones"            ><app-icon name="pin" /><span class="nav-label"
               >Direcciones</span
             ></a
           >
@@ -97,18 +87,14 @@ import { BUSINESS } from "./core/business";
             routerLink="/support-requests"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Ayuda"
-            title="Ayuda"
-            ><app-icon name="help" /><span class="nav-label">Ayuda</span></a
+            aria-label="Ayuda"            ><app-icon name="help" /><span class="nav-label">Ayuda</span></a
           >
           <a
             routerLink="/cart"
             routerLinkActive="selected"
             (click)="closeMenu()"
             class="nav-pill"
-            aria-label="Carrito"
-            title="Carrito"
-            ><app-icon name="cart" /><span class="nav-label">Carrito</span></a
+            aria-label="Carrito"            ><app-icon name="cart" /><span class="nav-label">Carrito</span></a
           >
         }
         @if (session.user()?.role === "ADMIN") {
@@ -116,9 +102,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/admin"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Administración"
-            title="Administración"
-            ><app-icon name="admin" /><span class="nav-label"
+            aria-label="Administración"            ><app-icon name="dashboard" /><span class="nav-label"
               >Administración</span
             ></a
           >
@@ -126,17 +110,13 @@ import { BUSINESS } from "./core/business";
             routerLink="/admin/orders"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Pedidos"
-            title="Pedidos"
-            ><app-icon name="orders" /><span class="nav-label">Pedidos</span></a
+            aria-label="Pedidos"            ><app-icon name="orders" /><span class="nav-label">Pedidos</span></a
           >
           <a
             routerLink="/inventory"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Inventario"
-            title="Inventario"
-            ><app-icon name="inventory" /><span class="nav-label"
+            aria-label="Inventario"            ><app-icon name="inventory" /><span class="nav-label"
               >Inventario</span
             ></a
           >
@@ -144,9 +124,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/support"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Soporte"
-            title="Soporte"
-            ><app-icon name="support" /><span class="nav-label"
+            aria-label="Soporte"            ><app-icon name="support" /><span class="nav-label"
               >Soporte</span
             ></a
           >
@@ -156,9 +134,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/inventory"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Inventario"
-            title="Inventario"
-            ><app-icon name="inventory" /><span class="nav-label"
+            aria-label="Inventario"            ><app-icon name="inventory" /><span class="nav-label"
               >Inventario</span
             ></a
           >
@@ -168,9 +144,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/support"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Atención al cliente"
-            title="Atención al cliente"
-            ><app-icon name="support" /><span class="nav-label"
+            aria-label="Atención al cliente"            ><app-icon name="support" /><span class="nav-label"
               >Atención al cliente</span
             ></a
           >
@@ -180,15 +154,11 @@ import { BUSINESS } from "./core/business";
             routerLink="/profile"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Mi cuenta"
-            title="Mi cuenta"
-            ><app-icon name="user" /><span class="nav-label">Mi cuenta</span></a
+            aria-label="Mi cuenta"            ><app-icon name="user" /><span class="nav-label">Mi cuenta</span></a
           ><button
             class="text-button logout-button"
             (click)="logout()"
-            aria-label="Salir"
-            title="Salir"
-          >
+            aria-label="Salir"          >
             <app-icon name="logout" /><span class="nav-label">Salir</span>
           </button>
         } @else {
@@ -196,9 +166,7 @@ import { BUSINESS } from "./core/business";
             routerLink="/login"
             routerLinkActive="selected"
             (click)="closeMenu()"
-            aria-label="Ingresar"
-            title="Ingresar"
-            ><app-icon name="login" /><span class="nav-label">Ingresar</span></a
+            aria-label="Ingresar"            ><app-icon name="login" /><span class="nav-label">Ingresar</span></a
           >
           <a routerLink="/signup" class="button small" (click)="closeMenu()"
             >Crear cuenta</a
@@ -221,7 +189,7 @@ import { BUSINESS } from "./core/business";
             aria-label="Cerrar mensaje"
             (click)="session.message.set('')"
           >
-            <span aria-hidden="true">×</span>
+            <app-icon name="close" />
           </button>
         </div>
       }

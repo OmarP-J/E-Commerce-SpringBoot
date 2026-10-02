@@ -30,6 +30,44 @@ export interface Product {
   categoryName: string;
   imageUrl: string | null;
   version: number;
+  /** Media de reseñas visibles; null si aún no tiene. Solo en catálogo y ficha. */
+  rating?: number | null;
+  reviewCount?: number;
+}
+export interface Review {
+  id: number;
+  author: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface ReviewSummary {
+  average: number | null;
+  count: number;
+  /** counts[i] = reseñas con i + 1 estrellas. */
+  counts: number[];
+  reviews: Review[];
+}
+export interface MyReview {
+  eligible: boolean;
+  rating: number | null;
+  comment: string | null;
+  hidden: boolean;
+  hiddenReason: string | null;
+  updatedAt: string | null;
+}
+export interface AdminReview {
+  id: number;
+  productId: number;
+  productName: string;
+  authorName: string;
+  authorEmail: string;
+  rating: number;
+  comment: string | null;
+  hidden: boolean;
+  hiddenReason: string | null;
+  createdAt: string;
 }
 export interface PageResult<T> {
   items: T[];
@@ -81,6 +119,11 @@ export interface Order {
     unitPrice: number;
     quantity: number;
   }[];
+  /** Cuándo llegó a cada estado; null si no pasó por él o es un pedido antiguo. */
+  processingAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
 }
 export interface Analytics {
   orders: number;
