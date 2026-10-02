@@ -82,13 +82,13 @@ interface CouponDraft {
         <article class="metric">
           <small>Ventas simuladas</small
           ><strong>{{
-            data.simulatedSales | currency: "DOP" : "symbol-narrow"
+            data.simulatedSales | currency: "DOP" : "symbol"
           }}</strong>
         </article>
         <article class="metric">
           <small>Ganancia estimada</small
           ><strong>{{
-            data.simulatedProfit | currency: "DOP" : "symbol-narrow"
+            data.simulatedProfit | currency: "DOP" : "symbol"
           }}</strong
           ><span>Ventas menos costos y reembolsos</span>
         </article>
@@ -106,59 +106,59 @@ interface CouponDraft {
         <article class="metric">
           <small>Pedido promedio</small
           ><strong>{{
-            data.averageOrderValue | currency: "DOP" : "symbol-narrow"
+            data.averageOrderValue | currency: "DOP" : "symbol"
           }}</strong
           ><span>{{ data.openSupportCases }} casos de soporte abiertos</span>
         </article>
       </section>
       <section class="admin-shortcuts" aria-label="Accesos rápidos">
         <a routerLink="/admin/products"
-          ><span>01</span>
+          ><span aria-hidden="true">01</span>
           <div>
             <strong>Gestionar productos</strong
             ><small>Precios, existencias e imágenes</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
         <a routerLink="/admin/categories"
-          ><span>02</span>
+          ><span aria-hidden="true">02</span>
           <div>
             <strong>Organizar categorías</strong
             ><small>Agrupa el catálogo con claridad</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
         <a routerLink="/admin/coupons"
-          ><span>03</span>
+          ><span aria-hidden="true">03</span>
           <div>
             <strong>Preparar cupones</strong
             ><small>Promociones y fechas de vigencia</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
         <a routerLink="/admin/orders"
-          ><span>04</span>
+          ><span aria-hidden="true">04</span>
           <div>
             <strong>Revisar pedidos</strong
             ><small>Consulta y actualiza su estado</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
         <a routerLink="/admin/users"
-          ><span>05</span>
+          ><span aria-hidden="true">05</span>
           <div>
             <strong>Asignar permisos</strong
             ><small>Roles para el equipo y los clientes</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
         <a routerLink="/admin/settings"
-          ><span>06</span>
+          ><span aria-hidden="true">06</span>
           <div>
             <strong>Configurar la tienda</strong
             ><small>Nombre, soporte y alerta de inventario</small>
           </div>
-          <b>→</b></a
+          <b aria-hidden="true">→</b></a
         >
       </section>
     }
@@ -226,6 +226,7 @@ interface CouponDraft {
           </div>
           <label
             >Nombre<input
+              id="product-name"
               name="productName"
               [(ngModel)]="productDraft.name"
               required
@@ -335,19 +336,20 @@ interface CouponDraft {
                   </td>
                   <td>
                     <strong>{{
-                      product.price | currency: "DOP" : "symbol-narrow"
+                      product.price | currency: "DOP" : "symbol"
                     }}</strong
                     ><small
                       >Costo:
                       {{
-                        product.cost ?? 0 | currency: "DOP" : "symbol-narrow"
+                        product.cost ?? 0 | currency: "DOP" : "symbol"
                       }}</small
                     >
                   </td>
                   <td>
-                    <span [class.field-error]="product.stock < 5">{{
-                      product.stock
-                    }}</span>
+                    <span [class.field-error]="product.stock < 5">{{ product.stock }}</span>
+                    @if (product.stock < 5) {
+                      <small class="field-error">Pocas existencias</small>
+                    }
                   </td>
                   <td>
                     <span class="status">{{
@@ -361,6 +363,7 @@ interface CouponDraft {
                         class="secondary"
                         [disabled]="busy"
                         (click)="editProduct(product)"
+                        [attr.aria-label]="'Editar ' + product.name"
                       >
                         Editar
                       </button>
@@ -369,6 +372,7 @@ interface CouponDraft {
                         class="secondary"
                         [disabled]="busy"
                         (click)="changeProductAvailability(product)"
+                        [attr.aria-label]="(product.active ? 'Desactivar ' : 'Activar ') + product.name"
                       >
                         {{ product.active ? "Desactivar" : "Activar" }}
                       </button>
@@ -378,6 +382,7 @@ interface CouponDraft {
                           accept="image/png,image/jpeg"
                           [disabled]="busy"
                           (change)="uploadImage(product, $event)"
+                          [attr.aria-label]="'Subir imagen de ' + product.name"
                         />
                       </label>
                     </div>
@@ -407,20 +412,21 @@ interface CouponDraft {
                   <div>
                     <span class="admin-card-label">Precio</span>
                     <strong>{{
-                      product.price | currency: "DOP" : "symbol-narrow"
+                      product.price | currency: "DOP" : "symbol"
                     }}</strong>
                     <small
                       >Costo:
                       {{
-                        product.cost ?? 0 | currency: "DOP" : "symbol-narrow"
+                        product.cost ?? 0 | currency: "DOP" : "symbol"
                       }}</small
                     >
                   </div>
                   <div>
                     <span class="admin-card-label">Stock</span>
-                    <span [class.field-error]="product.stock < 5">{{
-                      product.stock
-                    }}</span>
+                    <span [class.field-error]="product.stock < 5">{{ product.stock }}</span>
+                    @if (product.stock < 5) {
+                      <small class="field-error">Pocas existencias</small>
+                    }
                   </div>
                 </div>
                 <div class="actions compact-actions">
@@ -429,6 +435,7 @@ interface CouponDraft {
                     class="secondary"
                     [disabled]="busy"
                     (click)="editProduct(product)"
+                    [attr.aria-label]="'Editar ' + product.name"
                   >
                     Editar
                   </button>
@@ -437,6 +444,7 @@ interface CouponDraft {
                     class="secondary"
                     [disabled]="busy"
                     (click)="changeProductAvailability(product)"
+                    [attr.aria-label]="(product.active ? 'Desactivar ' : 'Activar ') + product.name"
                   >
                     {{ product.active ? "Desactivar" : "Activar" }}
                   </button>
@@ -446,6 +454,7 @@ interface CouponDraft {
                       accept="image/png,image/jpeg"
                       [disabled]="busy"
                       (change)="uploadImage(product, $event)"
+                      [attr.aria-label]="'Subir imagen de ' + product.name"
                     />
                   </label>
                 </div>
@@ -478,6 +487,7 @@ interface CouponDraft {
                 [attr.aria-current]="pageNumber === productPage ? 'page' : null"
                 [disabled]="busy"
                 (click)="goToProductPage(pageNumber)"
+                [attr.aria-label]="'Página ' + (pageNumber + 1)"
               >{{ pageNumber + 1 }}</button>
             }
           </div>
@@ -531,6 +541,7 @@ interface CouponDraft {
           </div>
           <label
             >Nombre<input
+              id="category-name"
               name="categoryName"
               [(ngModel)]="categoryDraft.name"
               required
@@ -593,6 +604,7 @@ interface CouponDraft {
                         class="secondary"
                         [disabled]="busy"
                         (click)="editCategory(category)"
+                        [attr.aria-label]="'Editar categoría ' + category.name"
                       >
                         Editar</button
                       ><button
@@ -600,6 +612,7 @@ interface CouponDraft {
                         class="text-button"
                         [disabled]="busy"
                         (click)="deleteCategory(category)"
+                        [attr.aria-label]="'Eliminar categoría ' + category.name"
                       >
                         Eliminar
                       </button>
@@ -631,6 +644,7 @@ interface CouponDraft {
                     class="secondary"
                     [disabled]="busy"
                     (click)="editCategory(category)"
+                    [attr.aria-label]="'Editar categoría ' + category.name"
                   >
                     Editar</button
                   ><button
@@ -638,6 +652,7 @@ interface CouponDraft {
                     class="text-button"
                     [disabled]="busy"
                     (click)="deleteCategory(category)"
+                    [attr.aria-label]="'Eliminar categoría ' + category.name"
                   >
                     Eliminar
                   </button>
@@ -666,6 +681,7 @@ interface CouponDraft {
                     [attr.aria-current]="pageNumber === categoryPage ? 'page' : null"
                     [disabled]="busy"
                     (click)="goToCategoryPage(pageNumber)"
+                    [attr.aria-label]="'Página ' + (pageNumber + 1)"
                   >{{ pageNumber + 1 }}</button>
                 }
               </div>
@@ -711,6 +727,7 @@ interface CouponDraft {
           </div>
           <label
             >Código<input
+              id="coupon-code"
               name="couponCode"
               [(ngModel)]="couponDraft.code"
               required
@@ -796,6 +813,7 @@ interface CouponDraft {
                         class="secondary"
                         [disabled]="busy"
                         (click)="editCoupon(coupon)"
+                        [attr.aria-label]="'Editar cupón ' + coupon.code"
                       >
                         Editar</button
                       ><button
@@ -803,6 +821,7 @@ interface CouponDraft {
                         class="secondary"
                         [disabled]="busy"
                         (click)="changeCouponAvailability(coupon)"
+                        [attr.aria-label]="(coupon.active ? 'Desactivar cupón ' : 'Activar cupón ') + coupon.code"
                       >
                         {{ coupon.active ? "Desactivar" : "Activar" }}
                       </button>
@@ -844,6 +863,7 @@ interface CouponDraft {
                     class="secondary"
                     [disabled]="busy"
                     (click)="editCoupon(coupon)"
+                    [attr.aria-label]="'Editar cupón ' + coupon.code"
                   >
                     Editar</button
                   ><button
@@ -851,6 +871,7 @@ interface CouponDraft {
                     class="secondary"
                     [disabled]="busy"
                     (click)="changeCouponAvailability(coupon)"
+                    [attr.aria-label]="(coupon.active ? 'Desactivar cupón ' : 'Activar cupón ') + coupon.code"
                   >
                     {{ coupon.active ? "Desactivar" : "Activar" }}
                   </button>
@@ -879,6 +900,7 @@ interface CouponDraft {
                     [attr.aria-current]="pageNumber === couponPage ? 'page' : null"
                     [disabled]="busy"
                     (click)="goToCouponPage(pageNumber)"
+                    [attr.aria-label]="'Página ' + (pageNumber + 1)"
                   >{{ pageNumber + 1 }}</button>
                 }
               </div>
@@ -954,19 +976,34 @@ interface CouponDraft {
                   <span class="status">{{ roleLabels[user.role] }}</span>
                 </td>
                 <td>
-                  <select
-                    #role
-                    [value]="user.role"
-                    [disabled]="busy || user.id === session.user()?.id"
-                    (change)="changeRole(user, role.value)"
-                  >
-                    <option value="CUSTOMER">Cliente</option>
-                    <option value="ADMIN">Administrador</option>
-                    <option value="INVENTORY_MANAGER">
-                      Gestor de inventario
-                    </option>
-                    <option value="CUSTOMER_SUPPORT">Soporte al cliente</option>
-                  </select>
+                  <!-- Elegir y guardar son dos pasos: con el teclado, cada
+                       flecha sobre un select dispara "change", y antes eso
+                       cambiaba el rol en el servidor a cada pulsación. -->
+                  <div class="actions compact-actions">
+                    <select
+                      #role
+                      [value]="user.role"
+                      [disabled]="busy || user.id === session.user()?.id"
+                      [attr.aria-label]="'Rol nuevo para ' + user.name"
+                      (change)="pickRole(user, role.value)"
+                    >
+                      <option value="CUSTOMER">Cliente</option>
+                      <option value="ADMIN">Administrador</option>
+                      <option value="INVENTORY_MANAGER">
+                        Gestor de inventario
+                      </option>
+                      <option value="CUSTOMER_SUPPORT">Soporte al cliente</option>
+                    </select>
+                    <button
+                      type="button"
+                      class="secondary"
+                      [disabled]="busy || !pendingRoles[user.id]"
+                      [attr.aria-label]="'Guardar rol de ' + user.name"
+                      (click)="changeRole(user)"
+                    >
+                      Guardar rol
+                    </button>
+                  </div>
                 </td>
               </tr>
             } @empty {
@@ -1001,7 +1038,7 @@ interface CouponDraft {
                   #role
                   [value]="user.role"
                   [disabled]="busy || user.id === session.user()?.id"
-                  (change)="changeRole(user, role.value)"
+                  (change)="pickRole(user, role.value)"
                 >
                   <option value="CUSTOMER">Cliente</option>
                   <option value="ADMIN">Administrador</option>
@@ -1011,6 +1048,15 @@ interface CouponDraft {
                   <option value="CUSTOMER_SUPPORT">Soporte al cliente</option>
                 </select>
               </label>
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="busy || !pendingRoles[user.id]"
+                [attr.aria-label]="'Guardar rol de ' + user.name"
+                (click)="changeRole(user)"
+              >
+                Guardar rol
+              </button>
             </article>
           } @empty {
             <p class="muted admin-cards-empty">
@@ -1035,6 +1081,7 @@ interface CouponDraft {
                   [attr.aria-current]="pageNumber === userPage ? 'page' : null"
                   [disabled]="busy"
                   (click)="goToUserPage(pageNumber)"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                 >{{ pageNumber + 1 }}</button>
               }
             </div>
@@ -1164,6 +1211,8 @@ export class AdminComponent extends Page implements OnInit {
   userRoleFilter = "";
   userPage = 0;
   readonly userPageSize = 8;
+  /** Rol elegido en el selector y todavía sin guardar, por id de usuario. */
+  pendingRoles: Record<number, UserRole> = {};
 
   productDraft: ProductDraft = this.emptyProduct();
   categoryDraft: CategoryDraft = this.emptyCategory();
@@ -1319,6 +1368,7 @@ export class AdminComponent extends Page implements OnInit {
       active: product.active,
       version: product.version,
     };
+    this.focusField("product-name");
   }
 
   resetProduct(): void {
@@ -1410,6 +1460,7 @@ export class AdminComponent extends Page implements OnInit {
       name: category.name,
       description: category.description,
     };
+    this.focusField("category-name");
   }
 
   resetCategory(): void {
@@ -1456,6 +1507,7 @@ export class AdminComponent extends Page implements OnInit {
       expiresOn: coupon.expiresOn,
       active: coupon.active,
     };
+    this.focusField("coupon-code");
   }
 
   resetCoupon(): void {
@@ -1497,13 +1549,22 @@ export class AdminComponent extends Page implements OnInit {
     });
   }
 
-  changeRole(user: User, value: string): void {
-    if (!this.isRole(value) || value === user.role) return;
+  /** Solo anota el rol elegido; se aplica al pulsar "Guardar rol". */
+  pickRole(user: User, value: string): void {
+    if (this.isRole(value) && value !== user.role)
+      this.pendingRoles[user.id] = value;
+    else delete this.pendingRoles[user.id];
+  }
+
+  changeRole(user: User): void {
+    const value = this.pendingRoles[user.id];
+    if (!value || value === user.role) return;
     void this.execute(async () => {
       const updated = await this.api.put<User>(
         "/admin/users/" + user.id + "/role",
         { role: value },
       );
+      delete this.pendingRoles[user.id];
       this.users = this.users.map((item) =>
         item.id === updated.id ? updated : item,
       );

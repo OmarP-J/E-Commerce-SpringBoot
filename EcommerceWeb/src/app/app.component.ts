@@ -8,22 +8,25 @@ import {
 } from "@angular/router";
 import { SessionService } from "./core/session.service";
 import { IconComponent } from "./core/icon.component";
+import { BUSINESS } from "./core/business";
 
 @Component({
   selector: "app-root",
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
   template: `
-    <a class="skip-link" href="#main">Saltar al contenido</a>
-    <div class="demo-bar">
-      <span>TIENDA DEMO</span><span>Los pagos son simulados</span>
-    </div>
+    <a class="skip-link" href="#main" (click)="skipToContent($event)"
+      >Saltar al contenido</a
+    >
+    <aside class="demo-bar" aria-label="Aviso de tienda de demostración">
+      <span>TIENDA DEMO</span><span>No se cobra dinero real</span>
+    </aside>
     <header class="site-header">
       <a
         routerLink="/"
         class="brand"
         (click)="closeMenu()"
         aria-label="Esencial, ir al inicio"
-        >esencial<span>®</span></a
+        >esencial</a
       >
       <button
         class="menu-toggle"
@@ -31,14 +34,16 @@ import { IconComponent } from "./core/icon.component";
         (click)="menuOpen = !menuOpen"
         [attr.aria-expanded]="menuOpen"
         aria-controls="main-navigation"
-        aria-label="Abrir menú"
+        [attr.aria-label]="menuOpen ? 'Cerrar menú' : 'Abrir menú'"
       >
-        <span></span><span></span><span></span>
+        <span aria-hidden="true"></span><span aria-hidden="true"></span
+        ><span aria-hidden="true"></span>
       </button>
       <nav
         id="main-navigation"
         [class.open]="menuOpen"
         aria-label="Navegación principal"
+        (keydown.escape)="closeMenu(true)"
       >
         <a
           routerLink="/"
@@ -201,35 +206,68 @@ import { IconComponent } from "./core/icon.component";
         }
       </nav>
     </header>
-    @if (session.message()) {
-      <div class="notice" [class.error]="session.isError()" role="status">
-        {{ session.message()
-        }}<button aria-label="Cerrar mensaje" (click)="session.message.set('')">
-          ×
-        </button>
-      </div>
-    }
-    <main id="main"><router-outlet /></main>
+    <!-- La región existe siempre: un lector de pantalla solo anuncia los
+         cambios dentro de una región viva que ya estaba en la página. -->
+    <div
+      class="notice-region"
+      [attr.aria-live]="session.isError() ? 'assertive' : 'polite'"
+      aria-atomic="true"
+    >
+      @if (session.message()) {
+        <div class="notice" [class.error]="session.isError()">
+          {{ session.message()
+          }}<button
+            type="button"
+            aria-label="Cerrar mensaje"
+            (click)="session.message.set('')"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+      }
+    </div>
+    <main id="main" tabindex="-1"><router-outlet /></main>
     <footer class="site-footer">
       <div>
-        <a routerLink="/" class="brand footer-brand">esencial<span>®</span></a>
+        <a routerLink="/" class="brand footer-brand">esencial</a>
         <p>Objetos útiles para días reales.</p>
       </div>
-      <div class="footer-links">
+      <nav class="footer-links" aria-label="Enlaces del pie de página">
         <a routerLink="/catalog">Catálogo</a>
         @if (!session.user()) {
           <a routerLink="/login">Ingresar</a>
         }
         <a routerLink="/">Inicio</a>
-      </div>
+      </nav>
       <p class="footer-note">
         Proyecto demostrativo · Moneda DOP<br />Sin cobros reales
+      </p>
+      <nav class="footer-legal" aria-label="Información legal">
+        <a routerLink="/legal">Aviso legal</a>
+        <a routerLink="/terms">Términos y condiciones</a>
+        <a routerLink="/privacy">Política de privacidad</a>
+        <a routerLink="/cookies">Política de cookies</a>
+        <a routerLink="/refunds">Política de reembolsos</a>
+      </nav>
+      <p class="footer-business">
+        © {{ year }} {{ business.legalName || business.tradeName }}
+        @if (business.taxId) {
+          · RNC/Cédula {{ business.taxId }}
+        }
+        @if (business.address) {
+          · {{ business.address }}
+        }
+        @if (business.email) {
+          · <a [href]="'mailto:' + business.email">{{ business.email }}</a>
+        }
       </p>
     </footer>
   `,
 })
 export class AppComponent {
   readonly session = inject(SessionService);
+  readonly business = BUSINESS;
+  readonly year = new Date().getFullYear();
   private readonly router = inject(Router);
   menuOpen = false;
   constructor() {
@@ -237,7 +275,17 @@ export class AppComponent {
       if (event instanceof NavigationEnd) this.closeMenu();
     });
   }
-  closeMenu(): void {
+  /**
+   * Con <base href="/">, un href="#main" apunta a "/#main": el navegador
+   * saltaba a la portada en vez de al contenido de la página actual.
+   */
+  skipToContent(event: Event): void {
+    event.preventDefault();
+    document.getElementById("main")?.focus();
+  }
+  closeMenu(returnFocus = false): void {
+    if (returnFocus && this.menuOpen)
+      document.querySelector<HTMLElement>(".menu-toggle")?.focus();
     this.menuOpen = false;
   }
   logout(): void {

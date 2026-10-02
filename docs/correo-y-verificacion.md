@@ -89,7 +89,7 @@ el código: si llega y lo escriben, el correo es real y es suyo.
 
 | Método | Ruta | Para qué |
 |---|---|---|
-| POST | `/api/auth/signup` | Devuelve `{verificationRequired, email, session}`. Si hace falta verificar, `session` viene vacío |
+| POST | `/api/auth/signup` | `{name, email, password, acceptTerms: true}` → devuelve `{verificationRequired, email, session}`. Si hace falta verificar, `session` viene vacío. Sin `acceptTerms: true` responde 400 |
 | POST | `/api/auth/verify` | `{email, code}` → devuelve la sesión iniciada |
 | POST | `/api/auth/verify/resend` | `{email}` → manda otro código |
 

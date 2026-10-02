@@ -65,6 +65,10 @@ import { Page } from "../core/page";
             placeholder="Incluye el producto y los detalles que debemos revisar."
           ></textarea>
         </label>
+        <p class="form-privacy-note">
+          Tu mensaje lo lee solo el equipo de soporte para resolver esta
+          solicitud. No incluyas contraseñas ni datos de tarjeta.
+        </p>
         <button [disabled]="caseForm.invalid || busy || orderId === null">
           Enviar solicitud
         </button>
@@ -138,6 +142,7 @@ import { Page } from "../core/page";
                   class="page-number"
                   [class.active]="pageNumber === page"
                   [attr.aria-current]="pageNumber === page ? 'page' : null"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                   [disabled]="busy"
                   (click)="goToPage(pageNumber)"
                 >{{ pageNumber + 1 }}</button>

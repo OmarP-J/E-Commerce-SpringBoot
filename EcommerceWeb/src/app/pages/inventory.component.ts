@@ -73,9 +73,10 @@ import { Page } from "../core/page";
                   ><small>{{ product.categoryName }}</small>
                 </td>
                 <td>
-                  <strong [class.field-error]="product.stock <= 5">{{
-                    product.stock
-                  }}</strong>
+                  <strong [class.field-error]="product.stock <= 5">{{ product.stock }}</strong>
+                  @if (product.stock <= 5) {
+                    <small class="field-error">Pocas existencias</small>
+                  }
                 </td>
                 <td>
                   <span class="status">{{
@@ -91,6 +92,7 @@ import { Page } from "../core/page";
                     type="button"
                     class="secondary"
                     (click)="select(product)"
+                    [attr.aria-label]="'Registrar movimiento de ' + product.name"
                   >
                     Registrar
                   </button>
@@ -120,6 +122,7 @@ import { Page } from "../core/page";
                   [attr.aria-current]="pageNumber === productPage ? 'page' : null"
                   [disabled]="busy"
                   (click)="goToProductPage(pageNumber)"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                 >{{ pageNumber + 1 }}</button>
               }
             </div>
@@ -148,7 +151,12 @@ import { Page } from "../core/page";
           }
         </div>
         <label
-          >Tipo<select name="movementType" [(ngModel)]="movementType" required>
+          >Tipo<select
+            id="movement-type"
+            name="movementType"
+            [(ngModel)]="movementType"
+            required
+          >
             <option value="ENTRY">Entrada de mercancía</option>
             <option value="EXIT">Salida de mercancía</option>
             <option value="ADJUSTMENT">Conteo físico</option>
@@ -259,6 +267,7 @@ import { Page } from "../core/page";
                   [attr.aria-current]="pageNumber === movementPage ? 'page' : null"
                   [disabled]="busy"
                   (click)="goToMovementPage(pageNumber)"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                 >{{ pageNumber + 1 }}</button>
               }
             </div>
@@ -375,6 +384,7 @@ export class InventoryComponent extends Page implements OnInit {
     this.selected = product;
     this.quantity = 1;
     this.note = "";
+    this.focusField("movement-type");
   }
   saveMovement(): void {
     if (!this.selected) return;

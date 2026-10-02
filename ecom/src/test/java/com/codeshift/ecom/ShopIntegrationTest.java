@@ -88,6 +88,18 @@ class ShopIntegrationTest {
     }
 
     @Test
+    void signupRequiresAcceptingTheTerms() throws Exception {
+        String email = "no-terms-" + UUID.randomUUID() + "@test.local";
+        call("POST", "/api/auth/signup", null,
+                Map.of("name", "Cliente", "email", email, "password", "LongPassword123!"))
+                .andExpect(status().isBadRequest());
+        call("POST", "/api/auth/signup", null,
+                Map.of("name", "Cliente", "email", email, "password", "LongPassword123!", "acceptTerms", false))
+                .andExpect(status().isBadRequest());
+        assertThat(users.findByEmail(email)).isEmpty();
+    }
+
+    @Test
     void healthCheckIsPublicAndIncludesTheDatabase() throws Exception {
         call("GET", "/actuator/health", null, null)
                 .andExpect(status().isOk())
@@ -340,7 +352,7 @@ class ShopIntegrationTest {
         // Sin correo configurado el registro devuelve la sesión directamente,
         // dentro de "session"; con verificación activa vendría vacío.
         var response = call("POST", "/api/auth/signup", null,
-                Map.of("name", "Cliente", "email", email, "password", "LongPassword123!"))
+                Map.of("name", "Cliente", "email", email, "password", "LongPassword123!", "acceptTerms", true))
                 .andExpect(status().isCreated());
         return json.readTree(response.andReturn().getResponse().getContentAsString())
                 .get("session").get("token").asText();

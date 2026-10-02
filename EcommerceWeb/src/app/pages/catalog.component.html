@@ -8,7 +8,7 @@
       {{
         wishlist
           ? "Todo lo que guardaste, listo para volver a encontrarlo."
-          : "Diseño útil, precios claros y una compra sencilla de principio a fin."
+          : "Busca por nombre o categoría y revisa el precio de cada producto antes de añadirlo al carrito."
       }}
     </p>
   </div>
@@ -71,13 +71,16 @@
 <div class="product-grid">
   @for (product of products; track product.id) {
     <article class="product-card">
+      <!-- Enlace duplicado del título: fuera del orden de tabulación y oculto
+           a lectores de pantalla para no anunciar dos veces el mismo producto. -->
       <a
         class="product-image"
         [routerLink]="['/products', product.id]"
-        [attr.aria-label]="'Ver ' + product.name"
+        tabindex="-1"
+        aria-hidden="true"
       >
         @if (product.imageUrl) {
-          <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+          <img [src]="product.imageUrl" alt="" loading="lazy" />
         } @else {
           <span class="placeholder" aria-hidden="true">{{
             product.name.charAt(0)
@@ -92,7 +95,7 @@
         }}</a>
         <div class="price-row">
           <strong>{{
-            product.price | currency: "DOP" : "symbol-narrow"
+            product.price | currency: "DOP" : "symbol"
           }}</strong
           ><small>{{
             product.active && product.stock > 0
@@ -105,6 +108,7 @@
             <button
               [disabled]="busy || !product.active || product.stock === 0"
               (click)="add(product)"
+              [attr.aria-label]="'Añadir al carrito: ' + product.name"
             >
               Añadir al carrito</button
             ><button
@@ -112,7 +116,8 @@
               [disabled]="busy"
               (click)="favorite(product)"
               [attr.aria-label]="
-                wishlist ? 'Quitar de favoritos' : 'Guardar en favoritos'
+                (wishlist ? 'Quitar de favoritos: ' : 'Guardar en favoritos: ') +
+                product.name
               "
             >
               {{ wishlist ? "Quitar" : "♡" }}
@@ -124,7 +129,7 @@
   } @empty {
     @if (!busy) {
       <div class="empty-state compact-empty">
-        <span>○</span>
+        <span aria-hidden="true">○</span>
         <h2>Aún no hay productos aquí.</h2>
         <p>
           {{
@@ -155,6 +160,7 @@
           class="page-number"
           [class.active]="pageNumber === page"
           [attr.aria-current]="pageNumber === page ? 'page' : null"
+          [attr.aria-label]="'Página ' + (pageNumber + 1)"
           [disabled]="busy"
           (click)="goToPage(pageNumber)"
         >

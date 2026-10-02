@@ -16,7 +16,16 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "@fontsource/dm-sans/400.css",
+              "@fontsource/dm-sans/500.css",
+              "@fontsource/dm-sans/600.css",
+              "@fontsource/dm-sans/700.css",
+              "@fontsource/manrope/600.css",
+              "@fontsource/manrope/700.css",
+              "@fontsource/manrope/800.css",
+              "src/styles.scss"
+            ],
             "assets": [{ "glob": "**/*", "input": "public" }]
           },
           "configurations": {
@@ -52,7 +61,16 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "@fontsource/dm-sans/400.css",
+              "@fontsource/dm-sans/500.css",
+              "@fontsource/dm-sans/600.css",
+              "@fontsource/dm-sans/700.css",
+              "@fontsource/manrope/600.css",
+              "@fontsource/manrope/700.css",
+              "@fontsource/manrope/800.css",
+              "src/styles.scss"
+            ]
           }
         }
       }

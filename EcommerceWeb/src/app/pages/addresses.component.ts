@@ -48,6 +48,7 @@ interface AddressDraft {
         </div>
         <label
           >Nombre corto<input
+            id="address-label"
             name="label"
             [(ngModel)]="draft.label"
             required
@@ -100,6 +101,10 @@ interface AddressDraft {
             [(ngModel)]="draft.defaultAddress"
           /><span>Usar como dirección principal</span></label
         >
+        <p class="form-privacy-note">
+          Guardamos estas direcciones solo para tus entregas. Puedes editarlas o
+          eliminarlas cuando quieras.
+        </p>
         <button [disabled]="addressForm.invalid || busy">
           {{
             busy
@@ -131,6 +136,7 @@ interface AddressDraft {
                 class="secondary"
                 [disabled]="busy"
                 (click)="edit(address)"
+                [attr.aria-label]="'Editar dirección ' + address.label"
               >
                 Editar</button
               ><button
@@ -138,6 +144,7 @@ interface AddressDraft {
                 class="text-button"
                 [disabled]="busy"
                 (click)="remove(address)"
+                [attr.aria-label]="'Eliminar dirección ' + address.label"
               >
                 Eliminar
               </button>
@@ -168,7 +175,7 @@ export class AddressesComponent extends Page implements OnInit {
   }
   edit(address: Address): void {
     this.draft = { ...address };
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    this.focusField("address-label");
   }
   reset(): void {
     this.draft = this.empty();

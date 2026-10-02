@@ -1,10 +1,13 @@
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import { BUSINESS } from "../core/business";
 import { roleLabels, User } from "../core/models";
 import { Page } from "../core/page";
+import { BusinessValueComponent } from "./legal/legal-shared";
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink, BusinessValueComponent],
   template: `
     <div class="section-heading">
       <div>
@@ -125,11 +128,37 @@ import { Page } from "../core/page";
           </form>
         </section>
       </div>
+
+      <section class="panel stack profile-privacy" aria-labelledby="privacy-title">
+        <div>
+          <p class="eyebrow">PRIVACIDAD</p>
+          <h2 id="privacy-title">Tus datos</h2>
+        </div>
+        <p>
+          @if (currentUser.role === "CUSTOMER") {
+            Puedes corregir tu nombre en este formulario y editar o borrar tus
+            direcciones en <a routerLink="/addresses">Mis direcciones</a>.
+          } @else {
+            Puedes corregir tu nombre en este formulario.
+          }
+          Para pedir una copia de tus datos o eliminar tu cuenta, escribe a
+          @if (business.email) {
+            <a [href]="'mailto:' + business.email">{{ business.email }}</a>
+          } @else {
+            <app-business-value value="" />
+          }
+          desde el correo de esta cuenta.
+        </p>
+        <p>
+          <a routerLink="/privacy">Lee la Política de privacidad</a>
+        </p>
+      </section>
     }
   `,
 })
 export class ProfileComponent extends Page implements OnInit {
   readonly roleLabels = roleLabels;
+  readonly business = BUSINESS;
   profile: User | null = null;
   name = "";
   currentPassword = "";
