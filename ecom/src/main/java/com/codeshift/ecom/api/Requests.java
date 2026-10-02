@@ -18,9 +18,19 @@ public final class Requests {
     private Requests() {
     }
 
+    /**
+     * {@code acceptTerms} se exige también aquí y no solo en el formulario: sin
+     * esta regla, cualquiera podría crear cuentas llamando a la API sin haber
+     * aceptado los Términos ni la Política de privacidad. Es {@code Boolean} y
+     * no {@code boolean} para que, si falta, el error diga qué falta en vez de
+     * un genérico "datos inválidos".
+     */
     public record Signup(@NotBlank @Size(max = 80) String name, @NotBlank @Email @Size(max = 254) String email,
-            @NotBlank @Size(min = 10, max = 72) String password) {
+            @NotBlank @Size(min = 10, max = 72) String password,
+            @NotNull(message = TERMS_REQUIRED) @AssertTrue(message = TERMS_REQUIRED) Boolean acceptTerms) {
     }
+
+    private static final String TERMS_REQUIRED = "Debes aceptar los Términos y la Política de privacidad.";
 
     public record Login(@NotBlank @Email String email, @NotBlank @Size(max = 72) String password) {
     }

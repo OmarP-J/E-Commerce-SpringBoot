@@ -16,6 +16,8 @@
     "@angular/forms": "20.3.30",
     "@angular/platform-browser": "20.3.30",
     "@angular/router": "20.3.30",
+    "@fontsource/dm-sans": "5.3.0",
+    "@fontsource/manrope": "5.3.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

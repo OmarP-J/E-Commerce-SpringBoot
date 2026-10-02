@@ -56,6 +56,15 @@ export abstract class Page implements OnDestroy {
     this.timers.set(key, setTimeout(run, delay));
   }
 
+  /**
+   * Lleva el foco al formulario que se acaba de rellenar con "Editar" o
+   * "Registrar". Sin esto, quien navega con teclado se quedaba en la lista y
+   * tenía que tabular a ciegas hasta encontrar el formulario.
+   */
+  protected focusField(id: string): void {
+    setTimeout(() => document.getElementById(id)?.focus());
+  }
+
   protected matchesSearch(query: string, ...values: unknown[]): boolean {
     const term = this.normalize(query);
     if (!term) return true;

@@ -94,7 +94,7 @@ import { Page } from "../core/page";
                     <span>{{ line.quantity }} × {{ line.productName }}</span>
                     <strong>{{
                       line.unitPrice * line.quantity
-                        | currency: "DOP" : "symbol-narrow"
+                        | currency: "DOP" : "symbol"
                     }}</strong>
                   </li>
                 }
@@ -115,7 +115,7 @@ import { Page } from "../core/page";
                 <div>
                   <dt>Subtotal</dt>
                   <dd>
-                    {{ order.subtotal | currency: "DOP" : "symbol-narrow" }}
+                    {{ order.subtotal | currency: "DOP" : "symbol" }}
                   </dd>
                 </div>
                 @if (order.discount > 0) {
@@ -127,13 +127,13 @@ import { Page } from "../core/page";
                       }
                     </dt>
                     <dd>
-                      −{{ order.discount | currency: "DOP" : "symbol-narrow" }}
+                      −{{ order.discount | currency: "DOP" : "symbol" }}
                     </dd>
                   </div>
                 }
                 <div class="grand">
                   <dt>Total</dt>
-                  <dd>{{ order.total | currency: "DOP" : "symbol-narrow" }}</dd>
+                  <dd>{{ order.total | currency: "DOP" : "symbol" }}</dd>
                 </div>
               </dl>
             </div>
@@ -143,7 +143,14 @@ import { Page } from "../core/page";
             <div class="order-actions">
               <label
                 >Actualizar estado
-                <select #nextStatus [disabled]="busy">
+                <!-- El estado elegido se guarda en el componente: leerlo del
+                     select sin un evento enlazado no disparaba la detección de
+                     cambios y el botón seguía deshabilitado. -->
+                <select
+                  #nextStatus
+                  [disabled]="busy"
+                  (change)="chosenStatus[order.id] = nextStatus.value"
+                >
                   <option value="">Selecciona un estado</option>
                   @for (status of nextStatuses(order.status); track status) {
                     <option [value]="status">{{ labels[status] }}</option>
@@ -152,8 +159,9 @@ import { Page } from "../core/page";
               </label>
               <button
                 type="button"
-                [disabled]="busy || !nextStatus.value"
-                (click)="changeStatus(order, nextStatus.value)"
+                [disabled]="busy || !chosenStatus[order.id]"
+                [attr.aria-label]="'Guardar estado del pedido ' + order.id"
+                (click)="changeStatus(order, chosenStatus[order.id])"
               >
                 Guardar estado
               </button>
@@ -198,6 +206,7 @@ import { Page } from "../core/page";
               [attr.aria-current]="pageNumber === page ? 'page' : null"
               [disabled]="busy"
               (click)="goToPage(pageNumber)"
+              [attr.aria-label]="'Página ' + (pageNumber + 1)"
             >{{ pageNumber + 1 }}</button>
           }
         </div>
@@ -220,6 +229,8 @@ export class OrdersComponent extends Page implements OnInit {
   statusFilter = "";
   page = 0;
   readonly pageSize = 6;
+  /** Estado elegido en el selector de cada pedido, todavía sin guardar. */
+  chosenStatus: Record<number, string> = {};
 
   get filteredOrders(): Order[] {
     const query = this.search.trim();
@@ -300,6 +311,7 @@ export class OrdersComponent extends Page implements OnInit {
         "/admin/orders/" + order.id + "/status",
         { status: value },
       );
+      delete this.chosenStatus[order.id];
       this.orders = this.orders.map((item) =>
         item.id === updated.id ? updated : item,
       );

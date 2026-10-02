@@ -51,10 +51,8 @@ interface PaypalSdk {
             @for (line of currentCart.items; track line.product.id) {
               <article class="panel line-item">
                 @if (line.product.imageUrl) {
-                  <img
-                    [src]="line.product.imageUrl"
-                    [alt]="line.product.name"
-                  />
+                  <!-- El nombre va justo al lado, en el título. -->
+                  <img [src]="line.product.imageUrl" alt="" />
                 } @else {
                   <span class="line-thumb" aria-hidden="true">{{
                     line.product.name.charAt(0)
@@ -65,27 +63,35 @@ interface PaypalSdk {
                   <h2>{{ line.product.name }}</h2>
                   <p class="muted">
                     {{
-                      line.product.price | currency: "DOP" : "symbol-narrow"
+                      line.product.price | currency: "DOP" : "symbol"
                     }}
                     por unidad
                   </p>
-                  <div class="quantity" aria-label="Cantidad">
+                  <div
+                    class="quantity"
+                    role="group"
+                    [attr.aria-label]="'Cantidad de ' + line.product.name"
+                  >
                     <button
                       type="button"
                       class="secondary"
                       [disabled]="busy"
                       (click)="setQuantity(line, line.quantity - 1)"
-                      aria-label="Quitar una unidad"
+                      [attr.aria-label]="
+                        'Quitar una unidad de ' + line.product.name
+                      "
                     >
                       −
                     </button>
-                    <strong>{{ line.quantity }}</strong>
+                    <strong aria-live="polite">{{ line.quantity }}</strong>
                     <button
                       type="button"
                       class="secondary"
                       [disabled]="busy || line.quantity >= line.product.stock"
                       (click)="setQuantity(line, line.quantity + 1)"
-                      aria-label="Añadir una unidad"
+                      [attr.aria-label]="
+                        'Añadir una unidad de ' + line.product.name
+                      "
                     >
                       +
                     </button>
@@ -93,13 +99,16 @@ interface PaypalSdk {
                 </div>
                 <div class="cart-line-total">
                   <strong>{{
-                    line.lineTotal | currency: "DOP" : "symbol-narrow"
+                    line.lineTotal | currency: "DOP" : "symbol"
                   }}</strong>
                   <button
                     type="button"
                     class="text-button"
                     [disabled]="busy"
                     (click)="setQuantity(line, 0)"
+                    [attr.aria-label]="
+                      'Eliminar ' + line.product.name + ' del carrito'
+                    "
                   >
                     Eliminar
                   </button>
@@ -167,7 +176,7 @@ interface PaypalSdk {
               <div>
                 <dt>Subtotal</dt>
                 <dd>
-                  {{ currentCart.subtotal | currency: "DOP" : "symbol-narrow" }}
+                  {{ currentCart.subtotal | currency: "DOP" : "symbol" }}
                 </dd>
               </div>
               @if (currentCart.discount > 0) {
@@ -175,7 +184,7 @@ interface PaypalSdk {
                   <dt>Descuento</dt>
                   <dd>
                     −{{
-                      currentCart.discount | currency: "DOP" : "symbol-narrow"
+                      currentCart.discount | currency: "DOP" : "symbol"
                     }}
                   </dd>
                 </div>
@@ -183,7 +192,7 @@ interface PaypalSdk {
               <div class="grand">
                 <dt>Total</dt>
                 <dd>
-                  {{ currentCart.total | currency: "DOP" : "symbol-narrow" }}
+                  {{ currentCart.total | currency: "DOP" : "symbol" }}
                 </dd>
               </div>
             </dl>
@@ -233,6 +242,13 @@ interface PaypalSdk {
                   placeholder="809-555-0100"
                 />
               </label>
+              <p class="form-privacy-note">
+                Usamos la dirección y el teléfono solo para gestionar la entrega
+                de este pedido.
+                <a routerLink="/privacy" target="_blank"
+                  >Política de privacidad<span class="sr-only"> (se abre en otra pestaña)</span></a
+                >
+              </p>
               <h3>Forma de pago</h3>
               @if (methods?.testMode) {
                 <p class="payment-note">
@@ -306,6 +322,13 @@ interface PaypalSdk {
                     Completa la dirección y el teléfono para habilitar el pago.
                   </p>
                 }
+                <p class="payment-note">
+                  El botón lo carga PayPal y puede usar sus propias cookies para
+                  procesar el pago.
+                  <a routerLink="/cookies" target="_blank"
+                  >Política de cookies<span class="sr-only"> (se abre en otra pestaña)</span></a
+                >
+                </p>
                 <div id="paypal-buttons" class="paypal-buttons"></div>
               } @else if (selectedProvider === "STRIPE") {
                 <button
@@ -316,6 +339,15 @@ interface PaypalSdk {
                   {{ busy ? "Redirigiendo…" : "Pagar con tarjeta" }}
                 </button>
               }
+              <p class="form-privacy-note">
+                Al confirmar el pedido aceptas los
+                <a routerLink="/terms" target="_blank"
+                  >Términos y condiciones<span class="sr-only"> (se abre en otra pestaña)</span></a
+                > y la
+                <a routerLink="/refunds" target="_blank"
+                  >Política de reembolsos<span class="sr-only"> (se abre en otra pestaña)</span></a
+                >.
+              </p>
             </form>
           </aside>
         </div>

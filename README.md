@@ -134,7 +134,7 @@ Todas las rutas parten de `/api`. Cliente usa `CUSTOMER`; Administración usa `A
 
 | Método | Ruta | Uso |
 | --- | --- | --- |
-| `POST` | `/auth/signup` | Registrar un cliente. |
+| `POST` | `/auth/signup` | Registrar un cliente. Exige `acceptTerms: true` (aceptación de Términos y Política de privacidad). |
 | `POST` | `/auth/login` | Iniciar sesión y recibir el JWT. |
 | `GET` | `/me` | Consultar el usuario autenticado. |
 | `PUT` | `/me` | Cambiar el nombre. |
@@ -230,6 +230,16 @@ La regla más útil para leer el backend es: el controlador recibe la solicitud,
 
 Con el backend iniciado en modo local, la documentación interactiva de la API está disponible en `http://127.0.0.1:8080/swagger-ui.html` y su descripción OpenAPI en `http://127.0.0.1:8080/v3/api-docs`. Ambas se desactivan automáticamente con el perfil de producción.
 
+## Páginas legales, privacidad y accesibilidad
+
+El sitio incluye Aviso legal (`/legal`), Términos y condiciones (`/terms`), Política de privacidad (`/privacy`), Política de cookies (`/cookies`) y Política de reembolsos (`/refunds`), enlazadas desde el pie de página. Los textos describen la tienda tal como funciona hoy: demostración, sin cobros reales y sin envíos.
+
+Antes de publicar, completa los datos del responsable en [EcommerceWeb/src/app/core/business.ts](EcommerceWeb/src/app/core/business.ts). Mientras falte alguno, las páginas muestran "Pendiente de completar". Si cambias de proveedor de hosting, base de datos o correo, actualiza también la lista `DATA_PROCESSORS` de ese archivo.
+
+El sitio no usa cookies propias ni herramientas de analítica o publicidad, y las tipografías se sirven desde el propio dominio; por eso no necesita un aviso de consentimiento de cookies. Si añades analítica, píxeles o anuncios, primero hay que pedir consentimiento y actualizar `/cookies`.
+
+El informe completo de la revisión legal, de accesibilidad y de riesgos pendientes está en [docs/cumplimiento-legal.md](docs/cumplimiento-legal.md).
+
 ## Ejecutar las pruebas
 
 Pruebas del backend:
@@ -239,7 +249,7 @@ cd ecom
 .\mvnw.cmd test
 ```
 
-Las dieciocho pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa, CORS, estado de la base y disponibilidad de la documentación OpenAPI.
+Las diecinueve pruebas de integración usan una base H2 temporal y comprueban permisos de los cuatro roles, asignación de permisos, privacidad de direcciones y pedidos, casos de soporte, reembolsos, auditoría de inventario, búsqueda sin tildes, cupones, redondeo, compra idempotente, validaciones, favoritos, perfil, cambios de estado, reposición al cancelar, compras simultáneas sin sobreventa, CORS, estado de la base, disponibilidad de la documentación OpenAPI y que el registro exija aceptar los Términos. Dos pruebas unitarias más comprueban que, en modo `LIVE`, PayPal y Stripe se desactivan si cobrarían en una moneda distinta del peso.
 
 Compilación del frontend:
 

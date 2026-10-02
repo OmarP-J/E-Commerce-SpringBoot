@@ -56,9 +56,13 @@ import { Auth, SignupResult, homeForRole } from "../core/models";
           autocomplete="email"
           placeholder="nombre@correo.com"
       /></label>
-      <label
-        >Contraseña<span class="password-field"
+      <!-- El botón de mostrar va fuera del <label>: dentro, su texto pasaba a
+           formar parte del nombre del campo ("Contraseña Ver"). -->
+      <div class="field">
+        <label for="auth-password">Contraseña</label>
+        <span class="password-field"
           ><input
+            id="auth-password"
             [type]="showPassword ? 'text' : 'password'"
             name="password"
             [(ngModel)]="password"
@@ -66,18 +70,21 @@ import { Auth, SignupResult, homeForRole } from "../core/models";
             [minlength]="signup ? 10 : 1"
             maxlength="72"
             [autocomplete]="signup ? 'new-password' : 'current-password'"
+            [attr.aria-describedby]="signup ? 'password-hint' : null"
             placeholder="{{
               signup ? 'Mínimo 10 caracteres' : 'Tu contraseña'
             }}"
           /><button
             type="button"
             class="reveal-button"
+            aria-controls="auth-password"
             (click)="showPassword = !showPassword"
           >
-            {{ showPassword ? "Ocultar" : "Ver" }}
+            {{ showPassword ? "Ocultar" : "Ver"
+            }}<span class="sr-only"> contraseña</span>
           </button></span
-        ></label
-      >
+        >
+      </div>
       @if (signup) {
         <label
           >Repetir contraseña<input
@@ -88,7 +95,7 @@ import { Auth, SignupResult, homeForRole } from "../core/models";
             maxlength="72"
             autocomplete="new-password"
             placeholder="Escríbela otra vez" /></label
-        ><small
+        ><small id="password-hint"
           >Mínimo 10 caracteres. Usa una contraseña distinta a las de otras
           cuentas.</small
         >
@@ -96,10 +103,39 @@ import { Auth, SignupResult, homeForRole } from "../core/models";
       @if (signup && confirmation && password !== confirmation) {
         <p class="field-error" role="alert">Las contraseñas no coinciden.</p>
       }
+      @if (signup) {
+        <label class="check-row"
+          ><input
+            type="checkbox"
+            name="acceptTerms"
+            [(ngModel)]="acceptTerms"
+            required
+          /><span
+            >Tengo 18 años o más y acepto los
+            <a routerLink="/terms" target="_blank"
+              >Términos y condiciones<span class="sr-only">
+                (se abre en otra pestaña)</span
+              ></a
+            >
+            y la
+            <a routerLink="/privacy" target="_blank"
+              >Política de privacidad<span class="sr-only">
+                (se abre en otra pestaña)</span
+              ></a
+            >.</span
+          ></label
+        >
+        <p class="form-privacy-note">
+          Usamos tu nombre y tu correo solo para gestionar tu cuenta y enviarte
+          el código de verificación. No los compartimos para publicidad.
+        </p>
+      }
       <button
         class="login-submit"
         [disabled]="
-          form.invalid || busy || (signup && password !== confirmation)
+          form.invalid ||
+          busy ||
+          (signup && (password !== confirmation || !acceptTerms))
         "
       >
         {{
@@ -132,6 +168,7 @@ export class AuthComponent extends Page {
   password = "";
   confirmation = "";
   showPassword = false;
+  acceptTerms = false;
   submit(): void {
     void this.execute(async () => {
       const credentials = {
@@ -140,10 +177,10 @@ export class AuthComponent extends Page {
         password: this.password,
       };
       if (this.signup) {
-        const result = await this.api.post<SignupResult>(
-          "/auth/signup",
-          credentials,
-        );
+        const result = await this.api.post<SignupResult>("/auth/signup", {
+          ...credentials,
+          acceptTerms: this.acceptTerms,
+        });
         if (result.verificationRequired) {
           this.session.notify("Te enviamos un código a tu correo.");
           await this.goToVerification(result.email);

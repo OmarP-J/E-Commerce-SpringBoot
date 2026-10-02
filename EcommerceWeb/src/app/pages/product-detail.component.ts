@@ -1,5 +1,6 @@
 import { CurrencyPipe } from "@angular/common";
 import { Component, OnInit, inject } from "@angular/core";
+import { Title } from "@angular/platform-browser";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Cart, Product } from "../core/models";
 import { Page } from "../core/page";
@@ -15,16 +16,16 @@ import { Page } from "../core/page";
     }
     @if (product; as item) {
       <nav class="breadcrumbs" aria-label="Ruta">
-        <a routerLink="/">Inicio</a><span>/</span
-        ><a routerLink="/catalog">Catálogo</a><span>/</span
-        ><span>{{ item.name }}</span>
+        <a routerLink="/">Inicio</a><span aria-hidden="true">/</span
+        ><a routerLink="/catalog">Catálogo</a><span aria-hidden="true">/</span
+        ><span aria-current="page">{{ item.name }}</span>
       </nav>
       <section class="product-detail-page">
         <div class="detail-image">
           @if (item.imageUrl) {
             <img [src]="item.imageUrl" [alt]="item.name" />
           } @else {
-            <span>{{ item.name.charAt(0) }}</span>
+            <span aria-hidden="true">{{ item.name.charAt(0) }}</span>
           }
         </div>
         <div class="detail-content">
@@ -32,10 +33,10 @@ import { Page } from "../core/page";
           <h1>{{ item.name }}</h1>
           <p class="detail-description">{{ item.description }}</p>
           <strong class="detail-price">{{
-            item.price | currency: "DOP" : "symbol-narrow"
+            item.price | currency: "DOP" : "symbol"
           }}</strong>
           <p class="stock-note" [class.out]="!item.active || item.stock === 0">
-            <span></span
+            <span aria-hidden="true"></span
             >{{
               item.active && item.stock > 0
                 ? item.stock + " unidades disponibles"
@@ -48,26 +49,32 @@ import { Page } from "../core/page";
                 [disabled]="busy || !item.active || item.stock === 0"
                 (click)="add(item)"
               >
-                Añadir al carrito →</button
+                Añadir al carrito <span aria-hidden="true">→</span></button
               ><button
                 class="secondary"
                 [disabled]="busy"
                 (click)="favorite(item)"
               >
-                ♡ Guardar
+                <span aria-hidden="true">♡</span> Guardar en favoritos
               </button>
             </div>
           }
+          <!-- Solo afirmaciones que el sitio cumple de verdad. -->
           <div class="detail-benefits">
-            <span><b>Compra segura</b><small>Tu carrito es privado</small></span
-            ><span><b>Precio claro</b><small>Sin cargos ocultos</small></span>
+            <span
+              ><b>Carrito privado</b
+              ><small>Solo lo ves tú, con tu cuenta</small></span
+            ><span
+              ><b>Total antes de pagar</b
+              ><small>Con descuentos aplicados, antes de confirmar</small></span
+            >
           </div>
         </div>
       </section>
     }
     @if (!busy && !product) {
       <section class="empty-state">
-        <span>?</span>
+        <span aria-hidden="true">?</span>
         <h1>Producto no encontrado</h1>
         <p>Puede que ya no esté disponible.</p>
         <a class="button" routerLink="/catalog">Volver al catálogo</a>
@@ -78,12 +85,14 @@ import { Page } from "../core/page";
 export class ProductDetailComponent extends Page implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly title = inject(Title);
   product: Product | null = null;
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get("id"));
     if (!Number.isInteger(id) || id < 1) return;
     void this.execute(async () => {
       this.product = await this.api.get<Product>("/catalog/products/" + id);
+      this.title.setTitle(this.product.name + " · Esencial");
     });
   }
   add(product: Product): void {

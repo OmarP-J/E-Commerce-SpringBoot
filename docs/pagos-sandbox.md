@@ -73,9 +73,13 @@ PAYMENTS_RETURN_URL=https://esencial-tienda.vercel.app
 `PAYMENTS_RETURN_URL` es a dónde vuelve el comprador después de pagar en
 Stripe; tiene que ser la URL pública del frontend, sin barra final.
 
-Sobre la moneda: ni PayPal ni Stripe manejan pesos dominicanos, así que el
-monto se envía en la moneda de `PAYMENTS_CURRENCY` (USD por defecto). En modo
-de prueba da igual, pero tenlo en cuenta el día que cobres de verdad.
+Sobre la moneda: el catálogo calcula y muestra los precios en pesos (RD$), y el
+total viaja a la pasarela **sin convertir**, en la moneda de
+`PAYMENTS_CURRENCY` (USD por defecto). Un pedido de RD$1,490 se cobraría como
+USD 1,490. En modo de prueba da igual porque no se mueve dinero, pero por eso
+**con `PAYMENTS_MODE=LIVE` la aplicación desactiva PayPal y Stripe si
+`PAYMENTS_CURRENCY` no es `DOP`** y lo explica en el log. Para cobrar en otra
+moneda primero hay que implementar la conversión.
 
 ## Cómo queda protegido el monto
 

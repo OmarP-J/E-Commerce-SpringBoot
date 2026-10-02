@@ -35,6 +35,9 @@ import java.util.Map;
 @Slf4j
 public class PaymentService {
 
+    /** Moneda en la que el catálogo muestra los precios y se calculan los totales. */
+    static final String STORE_CURRENCY = "DOP";
+
     private final PaymentProperties config;
     private final RestClient.Builder clientBuilder = RestClient.builder();
 
@@ -55,6 +58,16 @@ public class PaymentService {
     void enforceTestMode() {
         if (config.getMode() == PaymentProperties.Mode.LIVE) {
             log.warn("PAGOS EN MODO LIVE: las transacciones mueven dinero real.");
+            // Los totales se calculan y se muestran en pesos y viajan a la
+            // pasarela sin convertir: con otra moneda, un pedido de RD$1,490
+            // se cobraría como USD 1,490. Mejor sin pasarela que cobrar de más.
+            if (!STORE_CURRENCY.equalsIgnoreCase(config.getCurrency())) {
+                config.getPaypal().setEnabled(false);
+                config.getStripe().setEnabled(false);
+                log.error("PayPal y Stripe desactivados: la tienda calcula los precios en {} pero "
+                        + "app.payments.currency es {} y no hay conversión de moneda.",
+                        STORE_CURRENCY, config.getCurrency());
+            }
             return;
         }
         if (config.getStripe().isEnabled() && !config.getStripe().isTestKeys()) {

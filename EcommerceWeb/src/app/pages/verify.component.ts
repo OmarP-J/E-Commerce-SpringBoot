@@ -14,7 +14,7 @@ import { Auth, homeForRole } from "../core/models";
         <h1>Revisa tu correo.</h1>
         <p>
           Te enviamos un código de 6 dígitos para confirmar que la dirección es
-          tuya. Así nadie puede crear una cuenta con tu correo.
+          tuya.
         </p>
       </div>
       <div class="auth-benefits">

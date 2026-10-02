@@ -85,7 +85,8 @@ import { Page } from "../core/page";
             type="button"
             class="panel case-button"
             [class.active]="selected?.id === item.id"
-            (click)="select(item)"
+            [attr.aria-pressed]="selected?.id === item.id"
+            (click)="open(item)"
           >
             <span
               ><small>CASO #{{ item.id }} · PEDIDO #{{ item.orderId }}</small
@@ -118,6 +119,7 @@ import { Page } from "../core/page";
                   [attr.aria-current]="pageNumber === casePage ? 'page' : null"
                   [disabled]="busy"
                   (click)="goToCasePage(pageNumber)"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                 >{{ pageNumber + 1 }}</button>
               }
             </div>
@@ -151,7 +153,12 @@ import { Page } from "../core/page";
             <p>{{ item.reason }}</p>
           </div>
           <label
-            >Estado<select name="caseStatus" [(ngModel)]="status" required>
+            >Estado<select
+              id="case-status"
+              name="caseStatus"
+              [(ngModel)]="status"
+              required
+            >
               <option value="OPEN">Abierto</option>
               <option value="IN_REVIEW">En revisión</option>
               <option value="APPROVED">Aprobado</option>
@@ -181,7 +188,7 @@ import { Page } from "../core/page";
             /><small
               >Máximo:
               {{
-                orderTotal(item.orderId) | currency: "DOP" : "symbol-narrow"
+                orderTotal(item.orderId) | currency: "DOP" : "symbol"
               }}</small
             ></label
           >
@@ -261,7 +268,7 @@ import { Page } from "../core/page";
                     orderStatusLabels[order.status]
                   }}</span>
                 </td>
-                <td>{{ order.total | currency: "DOP" : "symbol-narrow" }}</td>
+                <td>{{ order.total | currency: "DOP" : "symbol" }}</td>
                 <td>{{ paymentLabel(order.paymentStatus) }}</td>
               </tr>
             } @empty {
@@ -290,6 +297,7 @@ import { Page } from "../core/page";
                   [attr.aria-current]="pageNumber === orderPage ? 'page' : null"
                   [disabled]="busy"
                   (click)="goToOrderPage(pageNumber)"
+                  [attr.aria-label]="'Página ' + (pageNumber + 1)"
                 >{{ pageNumber + 1 }}</button>
               }
             </div>
@@ -438,6 +446,11 @@ export class SupportComponent extends Page implements OnInit {
             null,
         );
     });
+  }
+  /** Abre un caso desde la bandeja y lleva el foco a su formulario. */
+  open(item: SupportCase): void {
+    this.select(item);
+    this.focusField("case-status");
   }
   select(item: SupportCase | null): void {
     this.selected = item;
